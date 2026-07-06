@@ -22,16 +22,27 @@ const categoryImg: Record<string, string> = {
 
 export default function Header() {
   const [scrolled, setScrolled] = useState(false);
+  const [pastHero, setPastHero] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [openCat, setOpenCat] = useState<string | null>(null);
   const { count, openDrawer } = useCart();
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    // Reveal the header search once the page's own hero (which has its own
+    // search box) has been scrolled past — avoids showing two search bars.
+    const threshold = () => window.innerHeight * 0.55;
+    const onScroll = () => {
+      setScrolled(window.scrollY > 8);
+      setPastHero(window.scrollY > threshold());
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    window.addEventListener("resize", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
 
   // Lock body scroll while the mobile menu sheet is open
@@ -50,7 +61,7 @@ export default function Header() {
     >
       {/* Utility bar */}
       <div className="hidden bg-space-950 text-white lg:block">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-1.5 text-xs">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-1 text-xs">
           <p className="font-medium text-white/90">
             Authorised Dell · HP · Lenovo · Asus store · since 2007
           </p>
@@ -66,11 +77,11 @@ export default function Header() {
       </div>
 
       {/* Main bar */}
-      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3 lg:gap-6">
+      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-2 lg:gap-6">
         <button
           type="button"
           onClick={() => setMenuOpen(true)}
-          className="flex h-11 w-11 items-center justify-center rounded-full text-ink-700 hover:bg-surface lg:hidden"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-ink-700 hover:bg-surface lg:hidden"
           aria-label="Open menu"
         >
           <Menu className="h-6 w-6" aria-hidden="true" />
@@ -83,12 +94,16 @@ export default function Header() {
             width={193}
             height={48}
             priority
-            className="h-9 w-auto sm:h-10"
+            className="h-7 w-auto sm:h-8"
           />
         </Link>
 
-        {/* Desktop / tablet inline search */}
-        <div className="hidden min-w-0 flex-1 md:block">
+        {/* Desktop / tablet inline search — hidden over the hero (which has its own), revealed once scrolled past it */}
+        <div
+          className={`hidden min-w-0 flex-1 overflow-hidden transition-all duration-300 md:block ${
+            pastHero ? "max-w-2xl opacity-100" : "max-w-0 opacity-0"
+          }`}
+        >
           <SearchBox />
         </div>
 
@@ -144,7 +159,7 @@ export default function Header() {
               <div key={cat.slug} className="group relative">
                 <Link
                   href={`/category/${cat.slug}`}
-                  className="inline-flex items-center gap-1.5 rounded-t-lg px-3.5 py-3 text-sm font-medium text-ink-700 transition-colors hover:text-brand-600"
+                  className="inline-flex items-center gap-1.5 rounded-t-lg px-3.5 py-2.5 text-sm font-medium text-ink-700 transition-colors hover:text-brand-600"
                 >
                   {cat.shortName ?? cat.name}
                   {cat.children ? (

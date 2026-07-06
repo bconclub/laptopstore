@@ -128,7 +128,7 @@ export default async function HomePage() {
   return (
     <>
       {/* ── Hero — one full viewport: hero copy + brand strip, nothing else peeking in ── */}
-      <section className="relative flex min-h-[calc(100vh-125px)] flex-col overflow-hidden bg-gradient-to-b from-brand-50 via-white to-white lg:min-h-[calc(100vh-141px)]">
+      <section className="relative flex min-h-[calc(100vh-117px)] flex-col overflow-hidden bg-gradient-to-b from-brand-50 via-white to-white lg:min-h-[calc(100vh-125px)]">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"
@@ -143,7 +143,7 @@ export default async function HomePage() {
 
         {/* Authorised brands strip */}
         <div className="relative border-t border-line bg-white/70">
-          <div className="mx-auto max-w-7xl px-4 py-4 lg:py-7">
+          <div className="mx-auto max-w-7xl px-4 py-3 lg:py-7">
             <p className="mb-4 text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-ink-400">
               Authorised store for
             </p>

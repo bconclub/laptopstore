@@ -95,7 +95,7 @@ export default function HeroSearch() {
   const { heading, sub } = copy[mode];
 
   return (
-    <div className="relative mx-auto w-full min-w-0 max-w-3xl px-4 pb-4 pt-6 text-center lg:pb-6 lg:pt-12">
+    <div className="relative mx-auto w-full min-w-0 max-w-3xl px-4 pb-3 pt-5 text-center lg:pb-6 lg:pt-12">
       <p className="rise-in mx-auto flex w-fit items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-brand-700 ring-1 ring-brand-100">
         <ShieldCheck className="h-4 w-4 text-brand-500 shrink-0" aria-hidden="true" />
         India&apos;s trusted laptop store since 2007
@@ -125,14 +125,14 @@ export default function HeroSearch() {
         </button>
       </div>
 
-      <h1 className="rise-in rise-in-delay-1 mt-4 font-display text-[2.4rem] font-bold leading-[1.05] tracking-tight text-ink-900 sm:text-5xl lg:mt-5 lg:text-[3.25rem]">
+      <h1 className="rise-in rise-in-delay-1 mt-3 font-display text-[2.4rem] font-bold leading-[1.05] tracking-tight text-ink-900 sm:text-5xl lg:mt-5 lg:text-[3.25rem]">
         {heading}
       </h1>
-      <p className="rise-in rise-in-delay-2 mx-auto mt-3 max-w-lg text-sm leading-relaxed text-ink-500 sm:text-base lg:mt-4">
+      <p className="rise-in rise-in-delay-2 mx-auto mt-2 max-w-lg text-sm leading-relaxed text-ink-500 sm:text-base lg:mt-4">
         {sub}
       </p>
 
-      <div className="rise-in rise-in-delay-3 mx-auto mt-4 max-w-xl lg:mt-5">
+      <div className="rise-in rise-in-delay-3 mx-auto mt-3 max-w-xl lg:mt-5">
         <SearchBox variant="hero" />
       </div>
 
