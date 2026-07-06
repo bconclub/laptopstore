@@ -1,36 +1,51 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Laptop Store India — Redesign
 
-## Getting Started
+Modern, app-like storefront for [laptopstoreindia.com](https://www.laptopstoreindia.com/) — The Laptop Specialist since 2007.
 
-First, run the development server:
+## Stack
+
+- **Next.js 16** (App Router, React 19, static generation)
+- **Tailwind CSS v4** (design tokens in `src/app/globals.css`)
+- **lucide-react** icons
+- **Supabase-ready** — `@supabase/supabase-js` installed, schema in `supabase/schema.sql`
+
+## Run
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev     # http://localhost:3000
+npm run build   # production build (80 static pages)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+src/
+  app/                     # Pages: home, category/[slug], product/[slug],
+                           # categories, cart, service, stores
+  components/              # Design system (Header, BottomNav, ProductCard, …)
+  data/                    # Seed catalog: real category tree + 16 curated products
+  lib/
+    data.ts                # Data-access layer — swap bodies for Supabase queries
+    supabase.ts            # Client, activates via env vars
+supabase/schema.sql        # Postgres schema + RLS policies
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Connecting Supabase (next step)
 
-## Learn More
+1. Create a Supabase project, run `supabase/schema.sql` in the SQL editor.
+2. Add to `.env.local`:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=...
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+   ```
+3. Replace the function bodies in `src/lib/data.ts` with Supabase queries —
+   page code needs no changes.
+4. Import the full ~3,400-product catalog from the live OpenCart store
+   (scrape or DB export) into the `products` / `product_specs` tables.
 
-To learn more about Next.js, take a look at the following resources:
+## Brand
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Extracted from the live site: blue `#2584C5`, accent yellow `#F6D62C`,
+ink `#0F1C2E`, Poppins (display) + Inter (body). Full token scale in
+`globals.css`. Design decisions in [DESIGN.md](DESIGN.md).

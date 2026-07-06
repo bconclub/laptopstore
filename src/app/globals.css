@@ -1,26 +1,266 @@
 @import "tailwindcss";
 
+/* ─── Laptop Store India, "Retail Precision" design system ─────────
+   Source of truth: DESIGN.md (user-provided).
+   Electric Blue #0081C5/#006195 primary · Logo Yellow #FCD400 for CTAs
+   Work Sans everywhere · Light mode · tonal layers, 1px outlines      */
+
+@theme {
+  /* Electric Blue (primary) */
+  --color-brand-50: #e8f3fc;
+  --color-brand-100: #cde5ff;
+  --color-brand-200: #a8d4f7;
+  --color-brand-300: #94ccff;
+  --color-brand-400: #3ba3dc;
+  --color-brand-500: #0081c5;
+  --color-brand-600: #006195;
+  --color-brand-700: #004a74;
+  --color-brand-800: #003a5c;
+  --color-brand-900: #002e49;
+  --color-brand-950: #001d32;
+
+  /* Secondary blues (replaces the old violet slot, keeps class names valid) */
+  --color-vio-400: #94ccff;
+  --color-vio-500: #3ba3dc;
+  --color-vio-600: #007abb;
+
+  /* Logo Yellow, CTAs, promos, key-advantage highlights */
+  --color-accent-300: #ffe16d;
+  --color-accent-400: #fcd400;
+  --color-accent-500: #fcd400;
+  --color-accent-600: #e9c400;
+
+  /* Deep brand navy for dark promotional sections */
+  --color-space-900: #00304f;
+  --color-space-950: #001d32;
+
+  /* Ink & surfaces (cool neutral "clean room" scale) */
+  --color-ink-900: #181c1e;
+  --color-ink-700: #3f4850;
+  --color-ink-500: #5c6670;
+  --color-ink-300: #9ba5b1;
+  --color-surface: #f1f4f6;
+  --color-line: #e2e8f0;
+
+  /* Semantic */
+  --color-success: #0e8345;
+  --color-danger: #ba1a1a;
+  --color-warn: #705d00;
+
+  /* Type, Work Sans across all levels */
+  --font-sans: var(--font-work), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-work), ui-sans-serif, system-ui, sans-serif;
+
+  /* Motion */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Shadows, "soft-lift" on interaction only, per Retail Precision */
+  --shadow-card: 0 1px 2px rgb(24 28 30 / 0.04);
+  --shadow-card-hover: 0 4px 8px rgb(24 28 30 / 0.06), 0 12px 24px rgb(24 28 30 / 0.08);
+  --shadow-float: 0 12px 40px rgb(0 29 50 / 0.20);
+  --shadow-glow: 0 0 0 2px rgb(0 129 197 / 0.25);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  /* No CSS smooth-scroll: Lenis (SmoothScroll.tsx) drives scrolling */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #f7fafc;
+  color: var(--color-ink-900);
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+/* Gradient headline text, light-blue sheen for dark-blue panels */
+.text-gradient {
+  background: linear-gradient(96deg, #94ccff 0%, #cde5ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Hero mesh, Electric Blue brand canvas (radial gradients, no filter:blur) */
+.bg-mesh {
+  background:
+    radial-gradient(900px 520px at 12% -12%, rgb(0 129 197 / 0.55), transparent 65%),
+    radial-gradient(760px 480px at 88% 8%, rgb(0 122 187 / 0.35), transparent 65%),
+    radial-gradient(620px 420px at 55% 118%, rgb(252 212 0 / 0.10), transparent 60%),
+    #001d32;
+}
+
+/* Subtle grid overlay for the hero.
+   NOTE: no mask-image, a full-viewport masked repeating gradient
+   hard-froze the Chromium renderer on Windows at fractional DPR.
+   Kept faint enough to not need a fade. */
+.bg-grid {
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.028) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* Glass card on dark */
+.glass {
+  background: rgb(255 255 255 / 0.06);
+  border: 1px solid rgb(255 255 255 / 0.12);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 24px 60px rgb(0 0 0 / 0.42);
+}
+
+/* App-like: hide scrollbars on snap rows, keep scrollability */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Horizontal snap carousel */
+.snap-row {
+  display: flex;
+  gap: 0.875rem;
+  overflow-x: auto;
+  /* proximity, not mandatory: snap assists but never fights drag/scroll */
+  scroll-snap-type: x proximity;
+  scroll-padding-inline: 1rem;
+  /* vertical room so hover-lift + card border/shadow aren't clipped by overflow-x */
+  padding-block: 0.75rem;
+}
+.snap-row > * {
+  scroll-snap-align: start;
+  flex-shrink: 0;
+}
+
+/* Entrance animation for above-the-fold content */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.rise-in {
+  animation: rise-in 0.6s var(--ease-out-soft) both;
+}
+.rise-in-delay-1 { animation-delay: 0.08s; }
+.rise-in-delay-2 { animation-delay: 0.16s; }
+.rise-in-delay-3 { animation-delay: 0.24s; }
+
+/* Floating glass chips in the hero */
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.float-slow { animation: float-y 6s ease-in-out infinite; }
+.float-slower { animation: float-y 8s ease-in-out 1.2s infinite; }
+
+/* Rotating glow arc behind the hero laptops */
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+.orbit-glow {
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgb(0 129 197 / 0) 120deg,
+    rgb(0 129 197 / 0.45) 190deg,
+    rgb(252 212 0 / 0.4) 230deg,
+    rgb(0 129 197 / 0) 300deg,
+    transparent 360deg
+  );
+  border-radius: 9999px;
+  animation: spin-slow 16s linear infinite;
+  -webkit-mask: radial-gradient(closest-side, transparent 60%, #000 63%, #000 70%, transparent 73%);
+  mask: radial-gradient(closest-side, transparent 60%, #000 63%, #000 70%, transparent 73%);
+}
+
+/* Scroll-reveal (used with IntersectionObserver) */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.65s var(--ease-out-soft), transform 0.65s var(--ease-out-soft);
+}
+.reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Reduced motion: disable looping/parallax + big entrance transforms only.
+   UI micro-interactions (hover, drawer, colour) stay smooth for everyone. */
+@media (prefers-reduced-motion: reduce) {
+  .rise-in, .reveal, .float-slow, .float-slower {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* Safe-area padding for the mobile bottom nav */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Leaflet marker tooltip + pin hover */
+.ls-tooltip {
+  background: #006195 !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 9999px !important;
+  padding: 3px 10px !important;
+  font: 600 12px var(--font-work), sans-serif !important;
+  box-shadow: 0 3px 10px rgb(0 29 50 / 0.35) !important;
+}
+.ls-tooltip::before {
+  border-top-color: #006195 !important;
+}
+.ls-pin {
+  transition: transform 0.18s var(--ease-out-soft);
+}
+.leaflet-marker-icon:hover .ls-pin {
+  transform: scale(1.15);
+}
+/* Individual branch dot */
+.ls-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #fcd400;
+  border: 3px solid #006195;
+  box-shadow: 0 2px 6px rgb(0 29 50 / 0.4);
+  transition: transform 0.18s var(--ease-out-soft);
+}
+.leaflet-marker-icon:hover .ls-dot {
+  transform: scale(1.3);
+}
+.leaflet-popup-content-wrapper {
+  border-radius: 14px !important;
+}
+/* "Use my location" marker — pulsing blue dot */
+.ls-me-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 9999px;
+  background: #0081c5;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 4px rgb(0 129 197 / 0.25), 0 2px 6px rgb(0 29 50 / 0.4);
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #eef1f7 25%, #f8fafd 50%, #eef1f7 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
 }
