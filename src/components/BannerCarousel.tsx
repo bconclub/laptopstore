@@ -5,7 +5,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-type Banner = { img: string; href: string; alt: string };
+type Banner = {
+  img: string;
+  href: string;
+  alt: string;
+  /** Taller crop used only below sm — falls back to `img` if omitted. */
+  mobileImg?: string;
+  /** CSS aspect-ratio for the mobile crop, e.g. "1672/941". */
+  mobileRatio?: string;
+};
 
 /**
  * One full-width banner at a time. No autoplay — the user slides it with the
@@ -23,21 +31,34 @@ export default function BannerCarousel({ banners }: { banners: Banner[] }) {
         style={{ transform: `translateX(-${i * 100}%)` }}
       >
         {banners.map((b) => (
-          <Link
-            key={b.img}
-            href={b.href}
-            aria-label={b.alt}
-            className="relative block aspect-[16/5] w-full shrink-0 sm:aspect-[3/1]"
-          >
-            <Image
-              src={b.img}
-              alt={b.alt}
-              fill
-              priority={b === banners[0]}
-              sizes="(max-width: 1280px) 100vw, 1280px"
-              quality={90}
-              className="object-cover"
-            />
+          <Link key={b.img} href={b.href} aria-label={b.alt} className="relative block w-full shrink-0">
+            {/* Taller mobile-specific crop, hidden at sm+ */}
+            <div
+              className="relative block w-full sm:hidden"
+              style={{ aspectRatio: b.mobileRatio ?? "4/3" }}
+            >
+              <Image
+                src={b.mobileImg ?? b.img}
+                alt={b.alt}
+                fill
+                priority={b === banners[0]}
+                sizes="100vw"
+                quality={90}
+                className="object-cover"
+              />
+            </div>
+            {/* Original thin banner, desktop only */}
+            <div className="relative hidden w-full sm:block sm:aspect-[3/1]">
+              <Image
+                src={b.img}
+                alt={b.alt}
+                fill
+                priority={b === banners[0]}
+                sizes="(max-width: 1280px) 100vw, 1280px"
+                quality={90}
+                className="object-cover"
+              />
+            </div>
           </Link>
         ))}
       </div>

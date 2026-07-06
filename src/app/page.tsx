@@ -10,7 +10,6 @@ import PromoCard from "@/components/PromoCard";
 import CategoryIcon from "@/components/CategoryIcon";
 import BrandLogo, { brandNames } from "@/components/BrandLogo";
 import StoreLocator from "@/components/StoreLocator";
-import PromoBanner from "@/components/PromoBanner";
 import BannerCarousel from "@/components/BannerCarousel";
 import Rail from "@/components/Rail";
 import Reveal from "@/components/Reveal";
@@ -49,12 +48,48 @@ const stats = [
 
 /* Promo banners laid across the page between content sections */
 const banners = {
-  laptops: { img: "/banners/laptops.png", href: "/category/laptops", alt: "New Laptop Deals — up to ₹15,000 off" },
-  refurbished: { img: "/banners/refurbished.png", href: "/category/refurbished-laptops", alt: "Certified Refurbished Sale — up to 60% off" },
-  gaming: { img: "/banners/gaming.png", href: "/category/gaming-laptops", alt: "Gaming Laptop Weekend — starting at ₹74,990" },
-  spares: { img: "/banners/spares.png", href: "/category/laptop-spares", alt: "Genuine Spares Mega Deals — up to 40% off" },
-  printers: { img: "/banners/printers.png", href: "/category/printers", alt: "Printers for Home & Office — starting at ₹4,999" },
-  rentals: { img: "/banners/rentals.png", href: "/service", alt: "Laptop Rentals Made Easy — get a rental quote" },
+  laptops: {
+    img: "/banners/laptops.png",
+    mobileImg: "/banners/mobile/laptops.jpg",
+    mobileRatio: "1672/941",
+    href: "/category/laptops",
+    alt: "New Laptop Deals — up to ₹15,000 off",
+  },
+  refurbished: {
+    img: "/banners/refurbished.png",
+    mobileImg: "/banners/mobile/refurbished.jpg",
+    mobileRatio: "1672/941",
+    href: "/category/refurbished-laptops",
+    alt: "Certified Refurbished Sale — up to 60% off",
+  },
+  gaming: {
+    img: "/banners/gaming.png",
+    mobileImg: "/banners/mobile/gaming.jpg",
+    mobileRatio: "1448/1086",
+    href: "/category/gaming-laptops",
+    alt: "Gaming Laptop Weekend — starting at ₹74,990",
+  },
+  spares: {
+    img: "/banners/spares.png",
+    mobileImg: "/banners/mobile/spares.jpg",
+    mobileRatio: "1448/1086",
+    href: "/category/laptop-spares",
+    alt: "Genuine Spares Mega Deals — up to 40% off",
+  },
+  printers: {
+    img: "/banners/printers.png",
+    mobileImg: "/banners/mobile/printers.jpg",
+    mobileRatio: "1448/1086",
+    href: "/category/printers",
+    alt: "Printers for Home & Office — starting at ₹4,999",
+  },
+  rentals: {
+    img: "/banners/rentals.png",
+    mobileImg: "/banners/mobile/rentals.jpg",
+    mobileRatio: "1672/941",
+    href: "/service",
+    alt: "Laptop Rentals Made Easy — get a rental quote",
+  },
 } as const;
 
 export default async function HomePage() {
@@ -92,8 +127,8 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* ── Hero ─────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-brand-50 via-white to-white">
+      {/* ── Hero — one full viewport: hero copy + brand strip, nothing else peeking in ── */}
+      <section className="relative flex min-h-[calc(100vh-125px)] flex-col overflow-hidden bg-gradient-to-b from-brand-50 via-white to-white lg:min-h-[calc(100vh-141px)]">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0"
@@ -102,25 +137,38 @@ export default async function HomePage() {
               "radial-gradient(700px 420px at 90% 0%, rgb(0 129 197 / 0.10), transparent 70%), radial-gradient(520px 360px at 0% 30%, rgb(252 212 0 / 0.08), transparent 70%)",
           }}
         />
-        <HeroSearch />
+        <div className="relative flex flex-1 items-center justify-center">
+          <HeroSearch />
+        </div>
 
         {/* Authorised brands strip */}
         <div className="relative border-t border-line bg-white/70">
-          <div className="mx-auto max-w-7xl px-4 py-4">
-            <p className="mb-3 text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-ink-400">
+          <div className="mx-auto max-w-7xl px-4 py-4 lg:py-7">
+            <p className="mb-4 text-center text-[11px] font-semibold uppercase tracking-[0.22em] text-ink-400">
               Authorised store for
             </p>
-            <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-6 lg:gap-3">
-              {brandNames.map((b) => (
-                <Link
-                  key={b}
-                  href={`/category/${brandCategory[b]}`}
-                  aria-label={`${b} laptops`}
-                  className="group flex items-center justify-center rounded-xl bg-white px-4 py-5 ring-1 ring-line transition-all duration-200 hover:-translate-y-0.5 hover:ring-brand-200 hover:shadow-(--shadow-card)"
-                >
-                  <BrandLogo brand={b} colored className="h-11 w-auto transition-transform group-hover:scale-110 sm:h-12 lg:h-14" />
-                </Link>
-              ))}
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-6 lg:gap-4">
+              {brandNames.map((b) => {
+                const boosted = b === "Lenovo" || b === "Asus" || b === "Acer";
+                return (
+                  <Link
+                    key={b}
+                    href={`/category/${brandCategory[b]}`}
+                    aria-label={`${b} laptops`}
+                    className="group flex items-center justify-center rounded-xl bg-white px-4 py-5 ring-1 ring-line transition-all duration-200 hover:-translate-y-0.5 hover:ring-brand-200 hover:shadow-(--shadow-card)"
+                  >
+                    <BrandLogo
+                      brand={b}
+                      colored
+                      className={
+                        boosted
+                          ? "h-[53px] w-auto transition-transform group-hover:scale-110 sm:h-[58px] lg:h-[67px]"
+                          : "h-11 w-auto transition-transform group-hover:scale-110 sm:h-12 lg:h-14"
+                      }
+                    />
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -170,7 +218,7 @@ export default async function HomePage() {
               >
                 {large ? (
                   <>
-                    {/* Full-bleed photo — laptops on the right, brand-blue colour carries the left side */}
+                    {/* Full-bleed photo — laptops on the right, kept crisp; brand-blue only washes the left third */}
                     <div className="pointer-events-none absolute inset-0 transition-transform duration-300 group-hover:scale-[1.03]">
                       <Image
                         src="/categories/laptop-category-hero.webp"
@@ -179,13 +227,13 @@ export default async function HomePage() {
                         priority
                         quality={95}
                         sizes="(max-width: 1024px) 100vw, 700px"
-                        className="object-cover object-right mix-blend-multiply"
+                        className="object-cover object-right"
                       />
                     </div>
-                    {/* Colour wash so the photo reads as part of the brand-blue card, not a plain cutout */}
+                    {/* Colour wash on the left only, so copy stays legible without dulling the photo */}
                     <div
                       aria-hidden="true"
-                      className="pointer-events-none absolute inset-0 bg-gradient-to-r from-brand-700 via-brand-700/60 to-transparent"
+                      className="pointer-events-none absolute inset-0 bg-gradient-to-r from-brand-700 via-brand-700/40 to-transparent"
                     />
                     <div
                       aria-hidden="true"
@@ -335,7 +383,7 @@ export default async function HomePage() {
 
       {/* ── Promo: Printers ──────────────────────────────────────── */}
       <Reveal as="section" className="mx-auto mt-14 max-w-7xl px-4 lg:mt-24">
-        <PromoBanner {...banners.printers} />
+        <BannerCarousel banners={[banners.printers]} />
       </Reveal>
 
       {/* ── Stats ────────────────────────────────────────────────── */}

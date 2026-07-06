@@ -144,8 +144,11 @@ export default function StoreLocator({ showStores = true }: { showStores?: boole
                         <p className="text-xs font-medium text-brand-600">{b.area}</p>
                       </div>
                       {b.brand ? (
-                        <span className="shrink-0" title={`${b.brand} exclusive store`}>
-                          <BrandLogo brand={b.brand} colored className="h-5 w-5" />
+                        <span
+                          className="flex shrink-0 items-center justify-center rounded-lg bg-surface px-2 py-1.5 ring-1 ring-line"
+                          title={`${b.brand} exclusive store`}
+                        >
+                          <BrandLogo brand={b.brand} colored className="h-7 w-7" />
                         </span>
                       ) : null}
                     </div>

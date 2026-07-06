@@ -33,7 +33,7 @@ export default function StoreMap({
     let cancelled = false;
     import("leaflet").then((L) => {
       if (cancelled || !holder.current || mapRef.current) return;
-      const map = L.map(holder.current, { scrollWheelZoom: false, zoomControl: true });
+      const map = L.map(holder.current, { scrollWheelZoom: false, zoomControl: true, attributionControl: false });
       mapRef.current = map;
       // Light, low-contrast basemap (CartoDB Positron) — reads closer to Google Maps
       L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {

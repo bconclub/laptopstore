@@ -95,14 +95,14 @@ export default function HeroSearch() {
   const { heading, sub } = copy[mode];
 
   return (
-    <div className="relative mx-auto max-w-3xl px-4 pb-6 pt-8 text-center lg:pt-12">
-      <p className="rise-in mx-auto inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-brand-700 ring-1 ring-brand-100">
-        <ShieldCheck className="h-4 w-4 text-brand-500" aria-hidden="true" />
+    <div className="relative mx-auto max-w-3xl px-4 pb-4 pt-6 text-center lg:pb-6 lg:pt-12">
+      <p className="rise-in mx-auto flex w-fit items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-brand-700 ring-1 ring-brand-100">
+        <ShieldCheck className="h-4 w-4 text-brand-500 shrink-0" aria-hidden="true" />
         India&apos;s trusted laptop store since 2007
       </p>
 
-      {/* Personal / Business switch — the same centred layout, different flow */}
-      <div className="rise-in mx-auto mt-5 inline-flex items-center gap-1 rounded-full bg-white p-1 ring-1 ring-line">
+      {/* Personal / Business switch — always its own row, stacked under the badge */}
+      <div className="rise-in mx-auto mt-3 flex w-fit items-center gap-1 rounded-full bg-white p-1 ring-1 ring-line">
         <button
           type="button"
           onClick={() => setMode("personal")}
@@ -125,14 +125,14 @@ export default function HeroSearch() {
         </button>
       </div>
 
-      <h1 className="rise-in rise-in-delay-1 mt-5 font-display text-[2.4rem] font-bold leading-[1.05] tracking-tight text-ink-900 sm:text-5xl lg:text-[3.25rem]">
+      <h1 className="rise-in rise-in-delay-1 mt-4 font-display text-[2.4rem] font-bold leading-[1.05] tracking-tight text-ink-900 sm:text-5xl lg:mt-5 lg:text-[3.25rem]">
         {heading}
       </h1>
-      <p className="rise-in rise-in-delay-2 mx-auto mt-4 max-w-lg text-sm leading-relaxed text-ink-500 sm:text-base">
+      <p className="rise-in rise-in-delay-2 mx-auto mt-3 max-w-lg text-sm leading-relaxed text-ink-500 sm:text-base lg:mt-4">
         {sub}
       </p>
 
-      <div className="rise-in rise-in-delay-3 mx-auto mt-5 max-w-xl">
+      <div className="rise-in rise-in-delay-3 mx-auto mt-4 max-w-xl lg:mt-5">
         <SearchBox variant="hero" />
       </div>
 
