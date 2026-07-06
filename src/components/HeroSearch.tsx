@@ -137,7 +137,7 @@ export default function HeroSearch() {
       </div>
 
       {/* Quick-click chips — the "different flow" per mode */}
-      <div className="rise-in rise-in-delay-3 no-scrollbar mx-auto mt-4 flex max-w-full justify-center gap-2 overflow-x-auto px-1 lg:flex-wrap">
+      <div className="rise-in rise-in-delay-3 no-scrollbar mx-auto mt-4 flex max-w-full gap-2 overflow-x-auto px-1 lg:flex-wrap lg:justify-center">
         {chips.map((c) => {
           const inner = (
             <>
