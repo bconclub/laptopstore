@@ -325,11 +325,18 @@ export default async function HomePage() {
 
       {/* ── Service banner ───────────────────────────────────────── */}
       <Reveal as="section" className="mx-auto mt-14 max-w-7xl px-4 lg:mt-24">
-        <div className="bg-mesh relative overflow-hidden rounded-[2rem] px-6 py-12 text-white sm:px-10 lg:px-16 lg:py-16">
-          {/* Repair tools artwork */}
-          <div className="pointer-events-none absolute -bottom-6 right-2 hidden h-64 w-80 opacity-95 lg:block xl:h-72 xl:w-96">
-            <Image src="/categories/repair.png" alt="" fill sizes="420px" className="object-contain" />
-          </div>
+        <div className="relative overflow-hidden rounded-[2rem] bg-space-950 px-6 py-12 text-white sm:px-10 lg:px-16 lg:py-16">
+          <Image
+            src="/categories/repair-bg.jpg"
+            alt=""
+            fill
+            sizes="(max-width: 1280px) 100vw, 1280px"
+            className="object-cover"
+          />
+          <div
+            className="absolute inset-0 bg-gradient-to-r from-space-950 via-space-950/85 to-space-950/40"
+            aria-hidden="true"
+          />
           <div className="relative flex flex-col items-start gap-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-xl">
               <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-semibold tracking-wide text-white/80">

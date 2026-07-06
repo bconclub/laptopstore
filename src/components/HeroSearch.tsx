@@ -95,7 +95,7 @@ export default function HeroSearch() {
   const { heading, sub } = copy[mode];
 
   return (
-    <div className="relative mx-auto max-w-3xl px-4 pb-4 pt-6 text-center lg:pb-6 lg:pt-12">
+    <div className="relative mx-auto w-full min-w-0 max-w-3xl px-4 pb-4 pt-6 text-center lg:pb-6 lg:pt-12">
       <p className="rise-in mx-auto flex w-fit items-center gap-2 rounded-full bg-white px-4 py-1.5 text-xs font-semibold text-brand-700 ring-1 ring-brand-100">
         <ShieldCheck className="h-4 w-4 text-brand-500 shrink-0" aria-hidden="true" />
         India&apos;s trusted laptop store since 2007

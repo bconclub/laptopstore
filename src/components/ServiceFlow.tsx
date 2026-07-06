@@ -121,8 +121,17 @@ export default function ServiceFlow() {
   return (
     <div>
       {/* ── Hero ─────────────────────────────────────────────────── */}
-      <section className="bg-mesh relative overflow-hidden text-white">
-        <div className="bg-grid absolute inset-0 opacity-60" aria-hidden="true" />
+      <section className="relative overflow-hidden bg-space-950 text-white">
+        <Image
+          src="/categories/repair-bg.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-space-950 via-space-950/80 to-space-950/30" aria-hidden="true" />
+        <div className="bg-grid absolute inset-0 opacity-40" aria-hidden="true" />
         <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-12 lg:grid-cols-[1.1fr_0.9fr] lg:py-20">
           <div>
             <p className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-xs font-semibold tracking-wide text-white/80">
