@@ -81,6 +81,7 @@ export default function ServiceFlow() {
   const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
+  const [jobCode, setJobCode] = useState("");
 
   const goToForm = (preset?: string) => {
     if (preset) setProblem((p) => (p.trim() ? p : preset));
@@ -92,13 +93,41 @@ export default function ServiceFlow() {
       problem.trim() || "—"
     }${photoName ? `\n(Photo ready to share: ${photoName})` : ""}\nName: ${name || "—"}\nPhone: ${phone || "—"}`;
 
-  const submit = () => {
+  // City → representative pincode for service-node routing (mock build;
+  // a real pincode field replaces this at go-live)
+  const CITY_PIN: Record<string, string> = {
+    Chennai: "600042", Bangalore: "560001", Bengaluru: "560001", Mumbai: "400001",
+    Pune: "411001", Hyderabad: "500001", Kolkata: "700001", Coimbatore: "641001", Vijayawada: "520001",
+  };
+
+  const submit = async () => {
     if (name.trim().length < 2) return setError("Please enter your name.");
-    if (!/^[6-9]\d{9}$/.test(phone.replace(/\D/g, "").slice(-10)))
+    const cleanPhone = phone.replace(/\D/g, "").slice(-10);
+    if (!/^[6-9]\d{9}$/.test(cleanPhone))
       return setError("Please enter a valid 10-digit mobile number.");
     setError(null);
-    window.open(`https://wa.me/919500156666?text=${encodeURIComponent(buildMessage())}`, "_blank", "noopener");
-    setDone(true);
+    try {
+      const r = await fetch("/api/checkout/repair", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          customer: { name: name.trim(), phone: cleanPhone, pincode: CITY_PIN[cityCode] ?? "600042" },
+          serviceType: "diagnosis",
+          brand: brand || "Unknown",
+          model: device,
+          issue: problem.trim() || "diagnosis needed",
+          mode: "dropoff",
+          slot: { date: new Date().toISOString().slice(0, 10), window: "10:00-12:00" },
+          payAdvance: false,
+        }),
+      });
+      const j = await r.json();
+      if (!j.ok) return setError(j.error ?? "Could not book the repair.");
+      setJobCode(j.data.code);
+      setDone(true);
+    } catch {
+      setError("Could not reach the booking service. Try WhatsApp below.");
+    }
   };
 
   const quickDiagnosis = () => {
@@ -271,18 +300,30 @@ export default function ServiceFlow() {
             <span className="flex h-16 w-16 items-center justify-center rounded-full bg-success/10 text-success">
               <CheckCircle2 className="h-8 w-8" aria-hidden="true" />
             </span>
-            <h2 className="mt-5 font-display text-2xl font-bold text-ink-900">Request sent</h2>
+            <h2 className="mt-5 font-display text-2xl font-bold text-ink-900">Repair booked</h2>
+            {jobCode && <p className="mt-1 font-mono text-sm text-brand-600">{jobCode}</p>}
             <p className="mt-2 max-w-sm text-sm leading-relaxed text-ink-500">
-              We&apos;ve opened WhatsApp with your {device.toLowerCase()} repair details for {cityCode}. Send the
-              message and our service team confirms your slot shortly.
+              Your {device.toLowerCase()} is booked at our nearest {cityCode} service centre — free diagnosis,
+              we call to confirm the slot. Track it anytime under My Orders.
             </p>
-            <button
-              type="button"
-              onClick={() => setDone(false)}
-              className="mt-6 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-ink-900 ring-1 ring-line hover:bg-surface"
-            >
-              Book another repair
-            </button>
+            <div className="mt-6 flex gap-3">
+              <a href="/account" className="rounded-lg bg-brand-600 px-5 py-2.5 text-sm font-semibold text-white">Track repair</a>
+              <a
+                href={`https://wa.me/919500156666?text=${encodeURIComponent(`Hi, about my repair ${jobCode || ""}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-ink-900 ring-1 ring-line hover:bg-surface"
+              >
+                WhatsApp us
+              </a>
+              <button
+                type="button"
+                onClick={() => setDone(false)}
+                className="rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-ink-700 ring-1 ring-line hover:bg-surface"
+              >
+                Book another
+              </button>
+            </div>
           </div>
         ) : (
           <div className="overflow-hidden rounded-3xl bg-white ring-1 ring-line">
