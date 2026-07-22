@@ -6,18 +6,13 @@
 import type { DataProvider } from "./contract";
 import { MockProvider } from "./mock/provider";
 
-declare global {
-  // eslint-disable-next-line no-var
-  var __lsiProvider: DataProvider | undefined;
-}
-
+// NOTE: no globalThis cache here — MockProvider is stateless (all state lives
+// in the MockStore's own globalThis slot), and caching the provider instance
+// across dev HMR pins OLD method code. A fresh instance per call is free.
 export function getProvider(): DataProvider {
-  if (!globalThis.__lsiProvider) {
-    // "supabase" branch lands in Phase 7 (SupabaseProvider stub) and goes
-    // live when the project + env vars exist.
-    globalThis.__lsiProvider = new MockProvider();
-  }
-  return globalThis.__lsiProvider;
+  // "supabase" branch lands in Phase 7 (SupabaseProvider stub) and goes
+  // live when the project + env vars exist.
+  return new MockProvider();
 }
 
 export type { DataProvider } from "./contract";

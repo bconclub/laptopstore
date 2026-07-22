@@ -11,11 +11,15 @@ import { FlowAbort, type FlowRun } from "./assert";
 import { SimClient, BASE } from "./client";
 import { flowReads } from "./flows/reads";
 import { flowGuarantees, flowPurchaseB2c, flowPurchaseSplit } from "./flows/purchase";
+import { flowEnquiryB2b, flowRental, flowRepair } from "./flows/services";
 
 const FLOWS: Record<string, () => Promise<FlowRun>> = {
   reads: flowReads,
   "purchase-b2c": flowPurchaseB2c,
   "purchase-split": flowPurchaseSplit,
+  repair: flowRepair,
+  rental: flowRental,
+  "enquiry-b2b": flowEnquiryB2b,
   guarantees: flowGuarantees,
 };
 

@@ -355,10 +355,20 @@ export class MockProvider implements DataProvider {
         unit.status = "sold";
         unit.soldOrderId = order.code;
       } else {
+        // Decrement at the fulfilment node first, then spill across the
+        // network for bulk quantities no single node covers.
         const leg = fulfilments.find((f) => f.itemIndexes.includes(idx))!;
-        const rec = s.stock.find((r) => r.productId === it.productId && r.nodeId === leg.nodeId && r.qty >= it.qty)
-          ?? s.stock.find((r) => r.productId === it.productId && r.qty >= it.qty);
-        if (rec) rec.qty -= it.qty;
+        let remaining = it.qty;
+        const pool = [
+          ...s.stock.filter((r) => r.productId === it.productId && r.nodeId === leg.nodeId),
+          ...s.stock.filter((r) => r.productId === it.productId && r.nodeId !== leg.nodeId).sort((a, b) => b.qty - a.qty),
+        ];
+        for (const rec of pool) {
+          if (remaining <= 0) break;
+          const take = Math.min(rec.qty, remaining);
+          rec.qty -= take;
+          remaining -= take;
+        }
       }
     }
 

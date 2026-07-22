@@ -39,11 +39,20 @@ export function routePlan(
     // Refurb serial purchase — the unit lives at one specific node
     const pinnedNode = item.serial ? serialNodeByProduct?.get(item.serial) : undefined;
 
-    const stocked = pinnedNode
-      ? stock.filter((s) => s.nodeId === pinnedNode).length >= 0
-        ? [{ productId: item.productId, nodeId: pinnedNode, qty: 1 }]
-        : []
+    let stocked = pinnedNode
+      ? [{ productId: item.productId, nodeId: pinnedNode, qty: 1 }]
       : stock.filter((s) => s.productId === item.productId && s.qty >= item.qty);
+
+    // Bulk quantities (B2B) can exceed any single node — fall back to the
+    // aggregate network: route from the deepest stocking source as long as
+    // TOTAL network stock covers the quantity ("no phantom stock" still holds).
+    if (!stocked.length && !pinnedNode) {
+      const any = stock.filter((s) => s.productId === item.productId && s.qty > 0);
+      const total = any.reduce((sum, s) => sum + s.qty, 0);
+      if (total >= item.qty) {
+        stocked = [...any].sort((a, b) => b.qty - a.qty);
+      }
+    }
 
     if (!stocked.length) {
       unfulfillable.push(idx);
