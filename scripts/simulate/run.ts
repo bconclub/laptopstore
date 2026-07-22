@@ -10,9 +10,13 @@ import { join } from "node:path";
 import { FlowAbort, type FlowRun } from "./assert";
 import { SimClient, BASE } from "./client";
 import { flowReads } from "./flows/reads";
+import { flowGuarantees, flowPurchaseB2c, flowPurchaseSplit } from "./flows/purchase";
 
 const FLOWS: Record<string, () => Promise<FlowRun>> = {
   reads: flowReads,
+  "purchase-b2c": flowPurchaseB2c,
+  "purchase-split": flowPurchaseSplit,
+  guarantees: flowGuarantees,
 };
 
 async function main() {

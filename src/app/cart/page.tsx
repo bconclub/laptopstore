@@ -88,14 +88,20 @@ export default function CartPage() {
               <span className="font-display text-2xl font-bold text-ink-900">{formatINR(total)}</span>
             </div>
             <p className="mt-1 text-xs text-ink-300">
-              Online checkout arrives with the Supabase backend. For now, order instantly on WhatsApp.
+              Live stock across 35 stores — your pincode picks the fastest route at checkout.
             </p>
             <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+              <Link
+                href="/checkout"
+                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-brand-600 px-6 py-3.5 text-sm font-bold text-white hover:bg-brand-700"
+              >
+                Checkout
+              </Link>
               <a
                 href={`https://wa.me/919500156666?text=${encodeURIComponent(checkoutMsg)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent-400 px-6 py-3.5 text-sm font-bold text-ink-900 hover:bg-accent-600"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-accent-400 px-6 py-3.5 text-sm font-bold text-ink-900 hover:bg-accent-600"
               >
                 <MessageCircle className="h-4.5 w-4.5" aria-hidden="true" />
                 Order on WhatsApp

@@ -17,8 +17,20 @@ export function err(status: number, message: string, extra?: Record<string, unkn
 }
 
 export function handleError(e: unknown): NextResponse {
-  if (e instanceof AuthError) return err(e.status, e.message);
-  if (e instanceof TransitionError) return err(409, e.message, { allowed: e.allowed });
+  if (e instanceof AuthError || (e instanceof Error && e.name === "AuthError")) {
+    const status = (e as AuthError).status ?? 401;
+    return err(status, e.message);
+  }
+  // instanceof can fail across dev-bundle boundaries — duck-type by name and
+  // recover the allowed list from the message if the field didn't survive.
+  if (e instanceof TransitionError || (e instanceof Error && e.name === "TransitionError")) {
+    let allowed = (e as { allowed?: string[] }).allowed;
+    if (!Array.isArray(allowed)) {
+      const m = e.message.match(/Allowed: (.+)$/);
+      allowed = m && !m[1].startsWith("(none") ? m[1].split(",").map((s) => s.trim()) : [];
+    }
+    return err(409, e.message, { allowed });
+  }
   const message = e instanceof Error ? e.message : "Unknown error";
   // Domain validation errors (stock, serials, availability) → 422
   if (/stock|serial|available|fulfillable|not found|unknown|read-only|without a quote|negative/i.test(message)) {
