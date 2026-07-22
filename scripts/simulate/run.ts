@@ -12,6 +12,7 @@ import { SimClient, BASE } from "./client";
 import { flowReads } from "./flows/reads";
 import { flowGuarantees, flowPurchaseB2c, flowPurchaseSplit } from "./flows/purchase";
 import { flowEnquiryB2b, flowRental, flowRepair } from "./flows/services";
+import { flowAdmin } from "./flows/admin";
 
 const FLOWS: Record<string, () => Promise<FlowRun>> = {
   reads: flowReads,
@@ -21,6 +22,7 @@ const FLOWS: Record<string, () => Promise<FlowRun>> = {
   rental: flowRental,
   "enquiry-b2b": flowEnquiryB2b,
   guarantees: flowGuarantees,
+  "admin-surfaces": flowAdmin,
 };
 
 async function main() {
