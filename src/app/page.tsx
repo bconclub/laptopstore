@@ -101,28 +101,30 @@ export default async function HomePage() {
   ]);
 
   const bento = categories.filter((c) => c.featured !== false && c.slug !== "printers");
-  const bySlug = (slug: string) => all.find((p) => p.slug === slug)!;
+  // Criteria-based picks — resilient to catalog regeneration (mock seed now,
+  // Supabase later); never pins a hardcoded slug.
+  const pickBy = (pred: (p: (typeof all)[number]) => boolean) => all.find(pred) ?? all[0];
   const whatsHot: {
-    product: NonNullable<ReturnType<typeof bySlug>>;
+    product: (typeof all)[number];
     title: string;
     startingAt?: boolean;
     imageOverride?: string;
   }[] = [
     {
-      product: bySlug("lenovo-legion-5-rtx4060"),
+      product: pickBy((p) => p.condition === "new" && /legion|tuf|nitro|victus|rog|gaming/i.test(p.name)),
       title: "Gaming Laptops",
       startingAt: true,
       imageOverride: "/hot/gaming.png",
     },
-    { product: bySlug("macbook-air-m2-13"), title: "MacBook Air M2", imageOverride: "/hot/macbook.png" },
-    { product: bySlug("hp-elitebook-840-g5-refurbished"), title: "Refurbished EliteBooks", imageOverride: "/hot/hp.png" },
-    { product: bySlug("dell-inspiron-15-3530"), title: "Dell Inspiron 15", imageOverride: "/hot/dell.png" },
+    { product: pickBy((p) => p.brand === "Apple" && p.condition === "new"), title: "MacBook Air", imageOverride: "/hot/macbook.png" },
+    { product: pickBy((p) => p.condition === "refurbished" && p.brand === "HP"), title: "Refurbished EliteBooks", imageOverride: "/hot/hp.png" },
+    { product: pickBy((p) => p.condition === "new" && p.brand === "Dell" && /inspiron/i.test(p.name)), title: "Dell Inspiron 15", imageOverride: "/hot/dell.png" },
   ];
   const dealsOfTheDay = [
-    { product: bySlug("dell-latitude-battery-original"), title: "Genuine Batteries" },
-    { product: bySlug("lenovo-thinkpad-screen-14-fhd"), title: "Laptop Screens" },
-    { product: bySlug("hp-laptop-keyboard-replacement"), title: "Laptop Keyboards" },
-    { product: bySlug("hp-laserjet-1020-plus"), title: "LaserJet Printers" },
+    { product: pickBy((p) => /battery/i.test(p.name)), title: "Genuine Batteries" },
+    { product: pickBy((p) => /screen/i.test(p.name)), title: "Laptop Screens" },
+    { product: pickBy((p) => /keyboard/i.test(p.name)), title: "Laptop Keyboards" },
+    { product: pickBy((p) => /stand|hub|backpack|mouse/i.test(p.name)), title: "Accessories" },
   ];
 
   return (
