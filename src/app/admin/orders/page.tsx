@@ -1,19 +1,25 @@
 "use client";
 
-/** Orders table — filters, split badges, serials; click through to detail. */
+/** Orders table — filters, split badges, serials; row click opens the right-panel drawer. */
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { OrderDrawer } from "@/components/admin/OrderDrawer";
 import { StatusChip, Th, Td, api } from "@/components/admin/ui";
 import { formatINR } from "@/lib/format";
-import type { Order, OrderStatus } from "@/lib/types";
+import type { Order, OrderStatus, StoreNode } from "@/lib/types";
 
 const STATUSES: (OrderStatus | "")[] = ["", "confirmed", "processing", "ready", "dispatched", "completed", "cancelled"];
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [nodes, setNodes] = useState<Map<string, StoreNode>>(new Map());
   const [status, setStatus] = useState<OrderStatus | "">("");
   const [audience, setAudience] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  useEffect(() => {
+    void api<StoreNode[]>("/api/admin/nodes").then((r) => setNodes(new Map((r.data ?? []).map((n) => [n.id, n]))));
+  }, []);
 
   useEffect(() => {
     const q = new URLSearchParams();
@@ -46,9 +52,13 @@ export default function AdminOrders() {
           </thead>
           <tbody className="divide-y divide-line">
             {orders.map((o) => (
-              <tr key={o.id} className="hover:bg-surface">
+              <tr
+                key={o.id}
+                onClick={() => setOpenId(o.id)}
+                className={`cursor-pointer transition-colors hover:bg-surface ${openId === o.id ? "bg-brand-50/60" : ""}`}
+              >
                 <Td>
-                  <Link href={`/admin/orders/${o.id}`} className="font-mono text-brand-700 hover:underline">{o.code}</Link>
+                  <span className="font-mono text-brand-700">{o.code}</span>
                   <span className="ml-2 rounded bg-surface px-1.5 py-0.5 text-[10px] font-bold uppercase text-ink-500">{o.audience}</span>
                 </Td>
                 <Td>{o.customer.name}<span className="ml-1 text-xs text-ink-400">{o.customer.pincode}</span></Td>
@@ -69,6 +79,13 @@ export default function AdminOrders() {
           </tbody>
         </table>
       </div>
+
+      <OrderDrawer
+        orderId={openId}
+        nodes={nodes}
+        onClose={() => setOpenId(null)}
+        onChanged={(updated) => setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)))}
+      />
     </div>
   );
 }

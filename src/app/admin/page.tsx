@@ -8,10 +8,11 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight } from "lucide-react";
+import { OrderDrawer } from "@/components/admin/OrderDrawer";
 import { MiniBars, StatusChip, api } from "@/components/admin/ui";
 import { formatINR } from "@/lib/format";
 import type { Analytics } from "@/lib/provider/contract";
-import type { Order } from "@/lib/types";
+import type { Order, StoreNode } from "@/lib/types";
 
 function greeting(): string {
   const h = new Date().getHours();
@@ -52,12 +53,15 @@ function RevenueSpark({ series }: { series: { date: string; revenue: number }[] 
 export default function AdminDashboard() {
   const [a, setA] = useState<Analytics | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [nodes, setNodes] = useState<Map<string, StoreNode>>(new Map());
+  const [openId, setOpenId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
     void api<Analytics>("/api/admin/analytics").then((r) => (r.ok ? setA(r.data!) : setError(r.error ?? "failed")));
     void api<Order[]>("/api/admin/orders?limit=6").then((r) => setOrders(r.data ?? []));
+    void api<StoreNode[]>("/api/admin/nodes").then((r) => setNodes(new Map((r.data ?? []).map((n) => [n.id, n]))));
     void api<{ name?: string } | null>("/api/auth/me").then((r) => setName(r.data?.name?.split(" ")[0] ?? ""));
   }, []);
 
@@ -143,15 +147,26 @@ export default function AdminDashboard() {
         </div>
         <div className="divide-y divide-line border-t border-line">
           {orders.map((o) => (
-            <Link key={o.id} href={`/admin/orders/${o.id}`} className="flex items-center justify-between px-5 py-3 transition-colors hover:bg-surface">
+            <button
+              key={o.id}
+              onClick={() => setOpenId(o.id)}
+              className="flex w-full items-center justify-between px-5 py-3 text-left transition-colors hover:bg-surface"
+            >
               <span className="font-mono text-sm text-brand-700">{o.code}</span>
               <span className="hidden text-sm text-ink-600 sm:block">{o.customer.name}</span>
               <span className="text-sm font-semibold text-ink-900">{formatINR(o.totals.grand)}</span>
               <StatusChip value={o.status} />
-            </Link>
+            </button>
           ))}
         </div>
       </section>
+
+      <OrderDrawer
+        orderId={openId}
+        nodes={nodes}
+        onClose={() => setOpenId(null)}
+        onChanged={(u) => setOrders((prev) => prev.map((o) => (o.id === u.id ? u : o)))}
+      />
     </div>
   );
 }
