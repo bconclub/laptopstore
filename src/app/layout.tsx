@@ -1,12 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Work_Sans } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import BottomNav from "@/components/BottomNav";
-import SmoothScroll from "@/components/SmoothScroll";
-import { CartProvider } from "@/components/cart/CartProvider";
-import CartDrawer from "@/components/cart/CartDrawer";
 
 // Retail Precision design system: Work Sans across all levels
 const workSans = Work_Sans({
@@ -32,6 +26,10 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
+/**
+ * Root layout = fonts + globals only. Storefront chrome lives in
+ * (site)/layout.tsx; the admin panel has its own shell in admin/layout.tsx.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -41,14 +39,7 @@ export default function RootLayout({
     <html lang="en" className={`${workSans.variable} h-full antialiased`}>
       {/* suppressHydrationWarning: browser extensions inject attributes into <body> */}
       <body className="flex min-h-full flex-col" suppressHydrationWarning>
-        <SmoothScroll />
-        <CartProvider>
-          <Header />
-          <main className="flex-1 pb-20 lg:pb-0">{children}</main>
-          <Footer />
-          <BottomNav />
-          <CartDrawer />
-        </CartProvider>
+        {children}
       </body>
     </html>
   );

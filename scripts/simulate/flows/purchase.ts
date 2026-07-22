@@ -154,5 +154,14 @@ export async function flowGuarantees(): Promise<FlowRun> {
   });
   run.must("phantom stock blocked", attempt.status === 422, `checkout rejected (${attempt.status}: ${attempt.error})`);
 
+  // Zoho-owned fields are read-only — "never invents a price, Zoho always wins"
+  const admin = new SimClient("admin");
+  await admin.loginAdmin("U-001");
+  const anyP = list.data![0];
+  const priceHack = await admin.patch(`/api/admin/products/${anyP.id}`, { price: 1 });
+  run.must("zoho-owned price write rejected", priceHack.status === 422 && /read-only|Zoho/i.test(priceHack.error ?? ""), `${priceHack.status}: ${priceHack.error}`);
+  const titleEdit = await admin.patch(`/api/admin/products/${anyP.id}`, { titles: { ...anyP.titles, seo: "Sim SEO title | Laptop Store" } });
+  run.must("website-owned title write ok", titleEdit.ok, `seo title updated on ${anyP.id}`);
+
   return run;
 }
