@@ -49,7 +49,8 @@ function LoginInner() {
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-10">
       <div className="mb-8 flex items-center gap-3">
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-600 text-base font-black text-white">LS</span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/icon.png" alt="Laptop Store" className="h-11 w-11" />
         <span>
           <span className="block text-lg font-bold leading-tight text-ink-900">Laptop Store · Admin</span>
           <span className="block text-xs text-ink-400">One screen for the whole business</span>

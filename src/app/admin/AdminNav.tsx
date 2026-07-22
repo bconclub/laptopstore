@@ -79,9 +79,8 @@ export function AdminNav({ role, name }: { role?: Role; name?: string }) {
     <nav className="flex h-screen w-60 shrink-0 flex-col border-r border-line bg-white">
       {/* Brand */}
       <Link href="/admin" className="flex items-center gap-2.5 px-5 pb-5 pt-6">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-sm font-black tracking-tight text-white">
-          LS
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/icon.png" alt="Laptop Store" className="h-9 w-9" />
         <span>
           <span className="block text-sm font-bold leading-tight text-ink-900">Laptop Store</span>
           <span className="block text-[11px] font-medium leading-tight text-ink-400">The Laptop Specialist</span>
