@@ -108,6 +108,8 @@ export interface AnalyticsRange {
 }
 
 export interface Analytics {
+  /** Daily revenue over the window, oldest → newest (drives the dashboard sparkline) */
+  revenueByDay: { date: string; revenue: number }[];
   revenueByNode: { nodeId: string; nodeName: string; revenue: number; orders: number }[];
   revenueByLine: { line: LineType; revenue: number; orders: number }[];
   revenueBySource: { source: string; revenue: number; orders: number }[];

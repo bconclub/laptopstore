@@ -800,7 +800,18 @@ export class MockProvider implements DataProvider {
 
     const convertedEnquiries = s.enquiries.filter((e) => e.stage === "order_confirmed").length;
 
+    const days = range?.fromDays ?? 90;
+    const byDay = new Map<string, number>();
+    for (let i = days - 1; i >= 0; i--) {
+      byDay.set(new Date(Date.now() - i * 86400_000).toISOString().slice(0, 10), 0);
+    }
+    for (const o of orders) {
+      const d = o.createdAt.slice(0, 10);
+      if (byDay.has(d)) byDay.set(d, (byDay.get(d) ?? 0) + o.totals.grand);
+    }
+
     return {
+      revenueByDay: [...byDay.entries()].map(([date, revenue]) => ({ date, revenue })),
       revenueByNode: [...byNode.entries()]
         .map(([nodeId, e]) => ({ nodeId, nodeName: nodeName(nodeId), ...e }))
         .sort((a, b) => b.revenue - a.revenue)

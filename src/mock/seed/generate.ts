@@ -47,7 +47,7 @@ function buildUsers(rng: Rng, nodes: StoreNode[]): User[] {
   const serviceNode = nodes.find((n) => n.serviceCapable);
 
   const users: User[] = [
-    { id: "U-001", phone: "9500156001", name: "HQ Admin", email: "admin@laptopstoreindia.com", role: "hq_admin", audience: "b2c" },
+    { id: "U-001", phone: "9500156001", name: "Admin", email: "admin@laptopstoreindia.com", role: "hq_admin", audience: "b2c" },
     { id: "U-002", phone: "9500156002", name: `${outlets[0].area} Manager`, role: "outlet_manager", audience: "b2c", nodeId: outlets[0].id },
     { id: "U-003", phone: "9500156003", name: `${outlets[1].area} Manager`, role: "outlet_manager", audience: "b2c", nodeId: outlets[1].id },
     { id: "U-004", phone: "9500156004", name: `${outlets[2].area} Manager`, role: "outlet_manager", audience: "b2c", nodeId: outlets[2].id },
