@@ -335,6 +335,8 @@ export interface Order {
   status: OrderStatus;
   payment: { method: PaymentMethod; status: "paid" | "pending" | "mock" };
   tradeInCredit?: number;
+  /** Device the customer handed in for the trade-in credit (exchange flow) */
+  tradeInDevice?: string;
   gstInvoice?: { gstin: string; number: string };
   totals: { sub: number; credit: number; grand: number };
   /** Set when converted from a B2B enquiry */

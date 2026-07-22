@@ -75,6 +75,8 @@ export interface CreateOrderInput {
   mode: "pickup" | "delivery";
   payment: { method: Order["payment"]["method"] };
   tradeInCredit?: number;
+  /** Device handed in for the credit (exchange flow) */
+  tradeInDevice?: string;
   gstin?: string;
   sourceEnquiryId?: string;
 }

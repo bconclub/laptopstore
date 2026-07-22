@@ -172,6 +172,7 @@ create table orders (
   payment_method payment_method not null,
   payment_status payment_status not null default 'mock',
   trade_in_credit numeric,
+  trade_in_device text,
   gst_invoice jsonb,                          -- {gstin, number}
   totals jsonb not null,                      -- {sub, credit, grand}
   source_enquiry_id text,

@@ -47,6 +47,7 @@ export async function POST(req: NextRequest) {
         mode: body.mode === "pickup" ? "pickup" : "delivery",
         payment: { method },
         tradeInCredit: body.tradeInCredit ? Math.max(0, Number(body.tradeInCredit)) : undefined,
+        tradeInDevice: body.tradeInDevice ? String(body.tradeInDevice).slice(0, 80) : undefined,
         gstin: body.gstin ? String(body.gstin) : undefined,
       },
       session ? { userId: session.userId, role: session.role } : SYSTEM_ACTOR,

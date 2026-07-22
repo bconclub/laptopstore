@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  ArrowLeftRight,
   BarChart3,
   Boxes,
   LayoutDashboard,
@@ -35,6 +36,7 @@ const GROUPS: { title: string; items: NavItem[] }[] = [
       { href: "/admin/catalog", label: "Catalog", icon: Boxes },
       { href: "/admin/orders", label: "Orders", icon: Package },
       { href: "/admin/enquiries", label: "Enquiries", icon: MessageSquareQuote, roles: ["hq_admin", "b2b_desk"] },
+      { href: "/admin/exchanges", label: "Exchanges", icon: ArrowLeftRight, roles: ["hq_admin", "b2b_desk", "outlet_manager"] },
     ],
   },
   {

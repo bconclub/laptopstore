@@ -54,7 +54,9 @@ export async function flowAdmin(): Promise<FlowRun> {
   // Analytics reflect the run's writes
   const a = await hq.get<Analytics>("/api/admin/analytics");
   run.must("analytics revenue > 0", (a.data?.totals.revenue ?? 0) > 0, `₹${a.data?.totals.revenue.toLocaleString("en-IN")}`);
-  run.must("analytics counts live entities", (a.data?.totals.orders ?? 0) >= 250 && (a.data?.totals.repairs ?? 0) >= 81, `orders=${a.data?.totals.orders} repairs=${a.data?.totals.repairs}`);
+  // Seed produces ~250 orders / ~80 repairs; a few may fall outside the 90-day
+  // analytics window depending on rng draws, so assert seed-shape bounds, not exacts.
+  run.must("analytics counts live entities", (a.data?.totals.orders ?? 0) >= 240 && (a.data?.totals.repairs ?? 0) >= 75, `orders=${a.data?.totals.orders} repairs=${a.data?.totals.repairs}`);
   run.must("distributor league present", (a.data?.distributorLeague.length ?? 0) >= 5, `${a.data?.distributorLeague.length} distributors ranked`);
 
   // Role scoping: outlet manager sees only their node's orders

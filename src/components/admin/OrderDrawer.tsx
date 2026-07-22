@@ -190,7 +190,12 @@ export function OrderDrawer({
                   <span>Total · {order.payment.method}</span>
                   <span>{formatINR(order.totals.grand)}</span>
                 </div>
-                {order.totals.credit > 0 && <p className="text-xs text-success">includes −{formatINR(order.totals.credit)} trade-in credit</p>}
+                {order.totals.credit > 0 && (
+                  <p className="text-xs text-success">
+                    includes −{formatINR(order.totals.credit)} trade-in credit
+                    {order.tradeInDevice && <span className="text-ink-500"> for {order.tradeInDevice}</span>}
+                  </p>
+                )}
               </section>
 
               {/* Customer */}

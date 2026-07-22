@@ -341,6 +341,7 @@ export class MockProvider implements DataProvider {
         status: input.payment.method === "net30" ? "pending" : "mock",
       },
       tradeInCredit: credit || undefined,
+      tradeInDevice: credit ? input.tradeInDevice : undefined,
       gstInvoice: input.gstin ? { gstin: input.gstin, number: `GST-INV-${2000 + n}` } : undefined,
       totals: { sub, credit, grand: sub - credit },
       sourceEnquiryId: input.sourceEnquiryId,
@@ -763,6 +764,19 @@ export class MockProvider implements DataProvider {
       }
     }
 
+    // Service + rental income are revenue lines too — repairs from delivered
+    // job quotes, rentals from tier rent over the booked window.
+    const repairRevenueJobs = s.repairJobs.filter((j) => j.quoteAmount && ["approved", "in_repair", "ready", "delivered"].includes(j.stage));
+    const repairRevenue = repairRevenueJobs.reduce((sum, j) => sum + (j.quoteAmount ?? 0), 0);
+    if (repairRevenue) byLine.set("repair", { revenue: repairRevenue, orders: repairRevenueJobs.length });
+
+    const earningRentals = s.rentals.filter((r) => ["deposit_paid", "dispatched", "active", "return_due", "returned", "closed"].includes(r.stage));
+    const rentalRevenue = earningRentals.reduce((sum, r) => {
+      const days = Math.max(1, Math.round((new Date(r.to).getTime() - new Date(r.from).getTime()) / 86400_000));
+      return sum + days * r.tier.perDay;
+    }, 0);
+    if (rentalRevenue) byLine.set("rental", { revenue: rentalRevenue, orders: earningRentals.length });
+
     const delivered = s.repairJobs.filter((j) => j.stage === "delivered");
     const avgTat = delivered.length
       ? delivered.reduce((sum, j) => {
@@ -836,7 +850,8 @@ export class MockProvider implements DataProvider {
       },
       distributorLeague: league,
       totals: {
-        revenue: orders.reduce((sum, o) => sum + o.totals.grand, 0),
+        // Orders + service income + rental income — matches the sum of revenueByLine.
+        revenue: orders.reduce((sum, o) => sum + o.totals.grand, 0) + repairRevenue + rentalRevenue,
         orders: orders.length,
         enquiries: s.enquiries.length,
         repairs: s.repairJobs.length,

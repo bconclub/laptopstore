@@ -106,16 +106,39 @@ export function buildHistory(
       unit.soldOrderId = code;
       items = [{ productId: prod.id, serial: unit.serial, qty: 1, unitPrice: prod.price, line: "refurbished" }];
     } else {
-      const count = isB2b ? 1 : rng.int(1, 2);
-      items = rng.pickN(sellable, count).map((p) => ({
+      // Weighted basket mix so every line earns visibly: new laptops lead,
+      // but spares/accessory baskets are frequent and multi-qty.
+      const roll = rng.chance(0.45) ? "new" : rng.chance(0.55) ? "spares" : "accessories";
+      const pool = sellable.filter((p) => p.line === roll);
+      const source = pool.length ? pool : sellable;
+      const count = isB2b ? 1 : roll === "new" ? 1 : rng.int(1, 3);
+      items = rng.pickN(source, count).map((p) => ({
         productId: p.id,
-        qty: isB2b ? rng.int(5, 25) : 1,
+        qty: isB2b
+          ? (p.line === "new" ? rng.int(5, 25) : rng.int(20, 80))
+          : (p.line === "new" ? 1 : rng.int(1, 4)),
         unitPrice: isB2b ? Math.round(p.price * 0.92) : p.price,
         line: p.line,
       }));
+      // Laptop buyers often add an accessory or spare on top
+      if (!isB2b && roll === "new" && rng.chance(0.4)) {
+        const addonPool = sellable.filter((p) => p.line === "accessories" || p.line === "spares");
+        if (addonPool.length) {
+          const a = rng.pick(addonPool);
+          items.push({ productId: a.id, qty: rng.int(1, 2), unitPrice: a.price, line: a.line });
+        }
+      }
     }
     const sub = items.reduce((s, it) => s + it.qty * it.unitPrice, 0);
-    const credit = !isB2b && rng.chance(0.12) ? rng.int(2, 8) * 1000 : 0;
+    const hasNewItem = items.some((it) => it.line === "new" || it.line === "refurbished");
+    const credit = !isB2b && hasNewItem && rng.chance(0.2) ? rng.int(2, 8) * 1000 : 0;
+    const tradeInDevice = credit
+      ? rng.pick([
+          "Dell Inspiron 14 (2019)", "HP Pavilion x360 (2018)", "Lenovo IdeaPad 330",
+          "Asus Vivobook 14 (2020)", "Acer Aspire 5 (2019)", "MacBook Air 2017",
+          "Dell Latitude E7470", "HP EliteBook 820 G3",
+        ])
+      : undefined;
 
     const fulfilments: Order["fulfilments"] = split && items.length > 1
       ? items.map((_, idx) => ({
@@ -152,6 +175,7 @@ export function buildHistory(
         status: current === "completed" ? "paid" : isB2b ? "pending" : "paid",
       },
       tradeInCredit: credit || undefined,
+      tradeInDevice,
       gstInvoice: b2bUser?.gstin ? { gstin: b2bUser.gstin, number: `GST-INV-${1000 + i}` } : undefined,
       totals: { sub, credit, grand: sub - credit },
       timeline,
