@@ -6,10 +6,17 @@ import { getProvider } from "@/lib/provider";
 export const dynamic = "force-dynamic";
 
 /**
- * One-click admin login (mock build): POST { userId } for any seeded staff
- * user. Replaced by Supabase Auth at swap time. GET lists the staff roster
- * for the login page.
+ * Admin login (mock build). Two paths:
+ *  - POST { password }            → signs in as the HQ admin (the normal way in)
+ *  - POST { userId, password? }   → demo role views (Store Manager, desks)
+ *
+ * Password = ADMIN_PASSWORD env, falling back to the demo default below.
+ * When ADMIN_PASSWORD is set (e.g. on Vercel), the userId path requires the
+ * password too; locally without the env, one-click role logins and the
+ * simulation harness keep working unchanged. Supabase Auth replaces all of
+ * this at swap time.
  */
+const DEMO_PASSWORD = "laptopstore@2026";
 export async function GET() {
   try {
     const users = await getProvider().getUsers();
@@ -26,7 +33,18 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => null);
     const userId = String(body?.userId ?? "");
-    const user = await getProvider().getUserById(userId);
+    const password = String(body?.password ?? "");
+    const required = process.env.ADMIN_PASSWORD || DEMO_PASSWORD;
+
+    // Password-only login → HQ admin. userId login needs the password too
+    // whenever ADMIN_PASSWORD is explicitly set (deployed builds).
+    if (!userId || password || process.env.ADMIN_PASSWORD) {
+      if (password !== required) return err(403, "Wrong password");
+    }
+
+    const user = userId
+      ? await getProvider().getUserById(userId)
+      : (await getProvider().getUsers()).find((u) => u.role === "hq_admin");
     if (!user || !isAdminRole(user.role)) return err(403, "Not a staff user");
 
     const session: Session = {

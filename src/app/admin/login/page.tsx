@@ -1,14 +1,14 @@
 "use client";
 
 /**
- * Staff sign-in — demo build. Two clear roles up front (Admin runs everything;
- * Store Manager shows the scoped view — one manager stands in for all 35).
- * Specialist desks tucked below. Supabase Auth replaces this at go-live.
+ * Staff sign-in — password gets you in as Admin (HQ). Demo role views
+ * (Store Manager, desks) collapsed below; on deployed builds they need the
+ * same password. Supabase Auth replaces this at go-live.
  */
 
 import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Building2, Store } from "lucide-react";
+import { Store } from "lucide-react";
 import { api } from "@/components/admin/ui";
 
 interface StaffUser {
@@ -18,10 +18,18 @@ interface StaffUser {
   nodeId?: string;
 }
 
+const ROLE_LABEL: Record<string, string> = {
+  outlet_manager: "Store Manager",
+  distributor: "Distributor",
+  repair_desk: "Repair Desk",
+  b2b_desk: "B2B Desk",
+};
+
 function LoginInner() {
   const router = useRouter();
   const params = useSearchParams();
   const [users, setUsers] = useState<StaffUser[]>([]);
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState("");
   const [error, setError] = useState("");
 
@@ -29,10 +37,13 @@ function LoginInner() {
     void api<StaffUser[]>("/api/auth/admin-login").then((r) => setUsers(r.data ?? []));
   }, []);
 
-  async function login(userId: string) {
-    setBusy(userId);
+  async function login(userId?: string) {
+    setBusy(userId ?? "admin");
     setError("");
-    const r = await api("/api/auth/admin-login", { method: "POST", body: JSON.stringify({ userId }) });
+    const r = await api("/api/auth/admin-login", {
+      method: "POST",
+      body: JSON.stringify(userId ? { userId, password } : { password }),
+    });
     if (r.ok) {
       router.push(params.get("next") ?? "/admin");
       router.refresh();
@@ -42,9 +53,7 @@ function LoginInner() {
     }
   }
 
-  const admin = users.find((u) => u.role === "hq_admin");
-  const manager = users.find((u) => u.role === "outlet_manager");
-  const specialists = users.filter((u) => !["hq_admin", "outlet_manager"].includes(u.role));
+  const demoRoles = users.filter((u) => u.role !== "hq_admin");
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-4 py-10">
@@ -59,65 +68,59 @@ function LoginInner() {
 
       {error && <p className="mb-4 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}
 
-      <div className="space-y-3">
-        {admin && (
-          <button
-            onClick={() => login(admin.id)}
-            disabled={!!busy}
-            className="flex w-full items-center gap-4 rounded-2xl bg-white p-5 text-left shadow-(--shadow-card) ring-1 ring-line transition-all duration-150 hover:-translate-y-0.5 hover:ring-brand-400 disabled:opacity-50"
-          >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700">
-              <Building2 className="h-5 w-5" />
-            </span>
-            <span className="flex-1">
-              <span className="block text-sm font-bold text-ink-900">Admin · HQ</span>
-              <span className="block text-xs text-ink-500">Runs everything — catalog, orders, network, sync, analytics</span>
-            </span>
-            <span className="text-sm font-semibold text-brand-600">{busy === admin.id ? "…" : "Sign in"}</span>
-          </button>
-        )}
-        {manager && (
-          <button
-            onClick={() => login(manager.id)}
-            disabled={!!busy}
-            className="flex w-full items-center gap-4 rounded-2xl bg-white p-5 text-left shadow-(--shadow-card) ring-1 ring-line transition-all duration-150 hover:-translate-y-0.5 hover:ring-brand-400 disabled:opacity-50"
-          >
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent-400/25 text-warn">
-              <Store className="h-5 w-5" />
-            </span>
-            <span className="flex-1">
-              <span className="block text-sm font-bold text-ink-900">Store Manager</span>
-              <span className="block text-xs text-ink-500">
-                Sees only their outlet's orders & repairs — every one of the 35 stores gets this same view
-              </span>
-            </span>
-            <span className="text-sm font-semibold text-brand-600">{busy === manager.id ? "…" : "Sign in"}</span>
-          </button>
-        )}
-      </div>
+      {/* Password sign-in */}
+      <form
+        onSubmit={(e) => { e.preventDefault(); void login(); }}
+        className="rounded-2xl bg-white p-5 shadow-(--shadow-card) ring-1 ring-line"
+      >
+        <label htmlFor="admin-pass" className="mb-1.5 block text-sm font-semibold text-ink-900">
+          Admin password
+        </label>
+        <input
+          id="admin-pass"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Enter the admin password"
+          autoFocus
+          autoComplete="current-password"
+          className="w-full rounded-lg border border-line px-3 py-2.5 text-sm outline-none transition-shadow focus:ring-2 focus:ring-brand-400"
+        />
+        <button
+          type="submit"
+          disabled={!!busy || !password}
+          className="mt-3 w-full rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-brand-700 disabled:opacity-40"
+        >
+          {busy === "admin" ? "Signing in…" : "Sign in as Admin"}
+        </button>
+      </form>
 
-      {specialists.length > 0 && (
+      {demoRoles.length > 0 && (
         <details className="mt-5">
           <summary className="cursor-pointer text-xs font-medium text-ink-400 hover:text-ink-700">
-            Specialist desk logins (B2B desk, repair desk, distributor)
+            Demo role views (Store Manager, desks)
           </summary>
           <div className="mt-2 space-y-1.5">
-            {specialists.map((u) => (
+            {demoRoles.map((u) => (
               <button
                 key={u.id}
                 onClick={() => login(u.id)}
                 disabled={!!busy}
                 className="flex w-full items-center justify-between rounded-xl bg-white px-4 py-2.5 text-left ring-1 ring-line transition-colors hover:ring-brand-300 disabled:opacity-50"
               >
-                <span className="text-sm text-ink-700">{u.name}</span>
-                <span className="text-xs text-ink-400">{u.role.replace(/_/g, " ")}</span>
+                <span className="flex items-center gap-2 text-sm text-ink-700">
+                  {u.role === "outlet_manager" && <Store className="h-3.5 w-3.5 text-ink-300" />}
+                  {u.name}
+                </span>
+                <span className="text-xs text-ink-400">{ROLE_LABEL[u.role] ?? u.role.replace(/_/g, " ")}</span>
               </button>
             ))}
+            <p className="text-[11px] text-ink-400">Role views use the same admin password on deployed builds.</p>
           </div>
         </details>
       )}
 
-      <p className="mt-8 text-center text-xs text-ink-300">Demo build — no passwords. Supabase Auth at go-live.</p>
+      <p className="mt-8 text-center text-xs text-ink-300">Demo build — Supabase Auth at go-live.</p>
     </main>
   );
 }
