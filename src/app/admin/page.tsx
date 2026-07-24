@@ -7,6 +7,7 @@
  */
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle, ArrowRight, CalendarClock, Download, Headphones, ImageOff, Laptop, MapPin,
@@ -167,6 +168,7 @@ export default function AdminDashboard() {
   const [range, setRange] = useState(28);
   const [error, setError] = useState("");
   const imageOf = useCatalogImages();
+  const router = useRouter();
 
   useEffect(() => {
     void api<Analytics>("/api/admin/analytics").then((r) => (r.ok ? setA(r.data!) : setError(r.error ?? "failed")));
@@ -311,10 +313,12 @@ export default function AdminDashboard() {
           <div className="mt-3 h-[300px]"><RevenueChart series={stats.series} /></div>
         </section>
 
-        {/* Network performance map — where the business is buzzing */}
-        <section className="rounded-2xl bg-white p-5 shadow-(--shadow-card) lg:col-span-2">
-          <h2 className="mb-2 text-sm font-semibold text-ink-900">Network performance</h2>
-          <NetworkActivityMap nodes={nodeList} orders={orders} />
+        {/* Network performance map — every store, click to drill in */}
+        <section className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-(--shadow-card) lg:col-span-2">
+          <h2 className="px-5 pb-2 pt-5 text-sm font-semibold text-ink-900">Network performance</h2>
+          <div className="min-h-[300px] flex-1">
+            <NetworkActivityMap nodes={nodeList} orders={orders} onSelect={(id) => router.push(`/admin/network?node=${id}`)} />
+          </div>
         </section>
       </div>
 

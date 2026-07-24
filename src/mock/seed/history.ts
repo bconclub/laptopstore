@@ -87,12 +87,15 @@ export function buildHistory(
   const ORDER_PATH: OrderStatus[] = ["confirmed", "processing", "ready", "dispatched", "completed"];
   const soldUnits = serialUnits.filter((u) => u.status === "sold");
 
-  // ── Orders (~250) ──────────────────────────────────────────────────────────
-  for (let i = 0; i < 250; i++) {
+  // ── Orders (~700, business ramping up) ──────────────────────────────────────
+  // Creation is biased toward recent days (pow curve) so orders-per-day trends
+  // UP toward today and a healthy backlog of recent orders sits OPEN (awaiting
+  // dispatch) — that's what fills "Orders to fulfil" into the hundreds.
+  for (let i = 0; i < 700; i++) {
     const isB2b = rng.chance(0.18);
     const isRefurb = !isB2b && rng.chance(0.25) && soldUnits.length > i;
     const split = rng.chance(0.1);
-    const daysBack = rng.int(0, 90);
+    const daysBack = Math.floor(Math.pow(rng.float(), 1.8) * 90);
     const { timeline, createdAt, current } = walkTimeline(rng, ORDER_PATH, daysBack, 2);
     const node = rng.pick(rng.chance(0.85) ? outlets : distributors);
     const city = node.city;
@@ -223,11 +226,11 @@ export function buildHistory(
     });
   }
 
-  // ── Repair jobs (80) ───────────────────────────────────────────────────────
+  // ── Repair jobs (220, recency-biased for a rising trend) ────────────────────
   const REP_PATH: RepairStage[] = ["booked", "received", "diagnosed", "quoted", "approved", "in_repair", "ready", "delivered"];
   const ISSUES = ["cracked screen", "battery draining fast", "keyboard keys not working", "not powering on", "liquid spill", "running very slow", "hinge broken", "fan noise and overheating"];
-  for (let i = 0; i < 80; i++) {
-    const daysBack = rng.int(0, 45);
+  for (let i = 0; i < 220; i++) {
+    const daysBack = Math.floor(Math.pow(rng.float(), 1.6) * 45);
     const svc = rng.pick(repairServices);
     const node = rng.pick(serviceNodes);
     const pathLen = rng.int(1, 8);

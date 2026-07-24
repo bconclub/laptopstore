@@ -132,6 +132,13 @@ export default function AdminNetwork() {
   const [type, setType] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
+  // Deep-link: /admin/network?node=<id> opens that store's drawer (drill-in
+  // from the dashboard map). Read from location — no Suspense/useSearchParams.
+  useEffect(() => {
+    const n = new URLSearchParams(window.location.search).get("node");
+    if (n) setSelectedId(n);
+  }, []);
+
   useEffect(() => {
     void api<StoreNode[]>("/api/admin/nodes").then((r) => setNodes(r.data ?? []));
     void api<Order[]>("/api/admin/orders?limit=1000").then((r) => setOrders(r.data ?? []));

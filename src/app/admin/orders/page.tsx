@@ -49,7 +49,7 @@ function TrendLine({ orders }: { orders: Order[] }) {
   }, [orders]);
   if (!d) return null;
   return (
-    <svg viewBox={`0 0 ${d.W} ${d.H}`} className="h-20 w-full" preserveAspectRatio="none" aria-label="Orders per day, last 30 days">
+    <svg viewBox={`0 0 ${d.W} ${d.H}`} className="h-full min-h-[120px] w-full" preserveAspectRatio="none" aria-label="Orders per day, last 30 days">
       <defs>
         <linearGradient id="ord-g" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#0081C5" stopOpacity="0.16" />
@@ -155,14 +155,14 @@ export default function AdminOrders() {
 
       {/* Trend + top stores */}
       <div className="grid gap-4 lg:grid-cols-5">
-        <section className="rounded-2xl bg-white p-4 ring-1 ring-line lg:col-span-3">
+        <section className="flex flex-col rounded-2xl bg-white p-4 ring-1 ring-line lg:col-span-3">
           <div className="mb-3 flex items-baseline justify-between">
-            <p className="text-sm font-semibold text-ink-900">Orders per day · last 30 days</p>
+            <h2 className="text-sm font-semibold text-ink-900">Orders per day · last 30 days</h2>
             <p className="text-xs text-ink-400">
               {filtered.length} orders · {formatINR(filtered.reduce((s, o) => s + o.totals.grand, 0))}
             </p>
           </div>
-          <TrendLine orders={filtered} />
+          <div className="min-h-[120px] flex-1"><TrendLine orders={filtered} /></div>
         </section>
 
         <section className="rounded-2xl bg-white p-4 ring-1 ring-line lg:col-span-2">

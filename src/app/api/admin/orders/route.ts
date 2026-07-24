@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
         phone: q.get("phone") ?? undefined,
         nodeId: q.get("node") ?? undefined,
         audience: (q.get("audience") as Audience) ?? undefined,
-        limit: Math.min(Number(q.get("limit") ?? 100), 300),
+        limit: Math.min(Number(q.get("limit") ?? 100), 2000),
       },
       await actorWithNode(session),
     );
