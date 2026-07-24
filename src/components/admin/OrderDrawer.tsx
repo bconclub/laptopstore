@@ -117,14 +117,14 @@ export function OrderDrawer({
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className={`fixed inset-0 z-40 bg-ink-900/25 transition-opacity duration-200 ${open ? "opacity-100" : "pointer-events-none opacity-0"}`}
+        className={`fixed inset-0 z-[1200] bg-ink-900/25 transition-opacity duration-200 ${open ? "opacity-100" : "pointer-events-none opacity-0"}`}
         aria-hidden="true"
       />
       {/* Panel */}
       <aside
         role="dialog"
         aria-label="Order details"
-        className={`fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-white shadow-(--shadow-float) transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] ${
+        className={`fixed inset-y-0 right-0 z-[1201] flex w-full max-w-md flex-col bg-white shadow-(--shadow-float) transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >

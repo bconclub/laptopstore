@@ -9,10 +9,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { OrderDrawer } from "@/components/admin/OrderDrawer";
 import { StatusChip, Th, Td, api } from "@/components/admin/ui";
+import { useCatalogImages } from "@/lib/useCatalogImages";
+import { ImageOff } from "lucide-react";
 import { formatINR } from "@/lib/format";
 import type { Order, OrderStatus, StoreNode } from "@/lib/types";
 
 const STATUS_ORDER: OrderStatus[] = ["confirmed", "processing", "ready", "dispatched", "completed", "cancelled"];
+
+/* Rank ramp: deepest brand-blue for the leader, fading down. */
+const RANK = ["#005A8C", "#0081C5", "#2E9BD4", "#5FB4E0", "#93CDEC", "#BFE0F5", "#D8ECF9", "#E6F2FB"];
 
 const STATUS_META: Record<OrderStatus, { label: string; dot: string }> = {
   confirmed: { label: "Confirmed", dot: "bg-brand-500" },
@@ -23,31 +28,37 @@ const STATUS_META: Record<OrderStatus, { label: string; dot: string }> = {
   cancelled: { label: "Cancelled", dot: "bg-danger" },
 };
 
-/** Daily order-count bars for the last 30 days of the filtered set. */
-function TrendBars({ orders }: { orders: Order[] }) {
-  const days = useMemo(() => {
+/** Smoothed orders-per-day area line (last 30 days of the filtered set). */
+function TrendLine({ orders }: { orders: Order[] }) {
+  const d = useMemo(() => {
     const map = new Map<string, number>();
-    for (let i = 29; i >= 0; i--) {
-      map.set(new Date(Date.now() - i * 86400_000).toISOString().slice(0, 10), 0);
+    for (let i = 29; i >= 0; i--) map.set(new Date(Date.now() - i * 86400_000).toISOString().slice(0, 10), 0);
+    for (const o of orders) { const day = o.createdAt.slice(0, 10); if (map.has(day)) map.set(day, (map.get(day) ?? 0) + 1); }
+    const vals = [...map.values()];
+    if (vals.length < 2) return null;
+    const W = 900, H = 90;
+    const max = Math.max(1, ...vals);
+    const pts = vals.map((v, i) => [(i / (vals.length - 1)) * W, H - 6 - (v / max) * (H - 16)] as const);
+    // Catmull-Rom → bezier
+    let line = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] ?? pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] ?? p2;
+      line += `C${(p1[0] + (p2[0] - p0[0]) / 6).toFixed(1)},${(p1[1] + (p2[1] - p0[1]) / 6).toFixed(1)} ${(p2[0] - (p3[0] - p1[0]) / 6).toFixed(1)},${(p2[1] - (p3[1] - p1[1]) / 6).toFixed(1)} ${p2[0].toFixed(1)},${p2[1].toFixed(1)}`;
     }
-    for (const o of orders) {
-      const d = o.createdAt.slice(0, 10);
-      if (map.has(d)) map.set(d, (map.get(d) ?? 0) + 1);
-    }
-    return [...map.entries()];
+    return { line, area: `${line} L${W},${H} L0,${H} Z`, W, H };
   }, [orders]);
-  const peak = Math.max(1, ...days.map(([, v]) => v));
+  if (!d) return null;
   return (
-    <div className="flex h-20 items-end gap-[3px]" aria-label="Orders per day, last 30 days">
-      {days.map(([date, v]) => (
-        <div
-          key={date}
-          title={`${new Date(date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}: ${v} order${v === 1 ? "" : "s"}`}
-          className={`flex-1 rounded-t ${v ? "bg-brand-500 hover:bg-brand-600" : "bg-surface"}`}
-          style={{ height: `${Math.max(4, (v / peak) * 100)}%` }}
-        />
-      ))}
-    </div>
+    <svg viewBox={`0 0 ${d.W} ${d.H}`} className="h-20 w-full" preserveAspectRatio="none" aria-label="Orders per day, last 30 days">
+      <defs>
+        <linearGradient id="ord-g" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#0081C5" stopOpacity="0.16" />
+          <stop offset="100%" stopColor="#0081C5" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={d.area} fill="url(#ord-g)" />
+      <path d={d.line} fill="none" stroke="#0081C5" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
+    </svg>
   );
 }
 
@@ -58,6 +69,7 @@ export default function AdminOrders() {
   const [audience, setAudience] = useState("");
   const [nodeId, setNodeId] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
+  const imageOf = useCatalogImages();
 
   useEffect(() => {
     void api<StoreNode[]>("/api/admin/nodes").then((r) => setNodes(new Map((r.data ?? []).map((n) => [n.id, n]))));
@@ -91,7 +103,7 @@ export default function AdminOrders() {
       e.count += 1;
       agg.set(n, e);
     }
-    return [...agg.entries()].sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 6);
+    return [...agg.entries()].sort((a, b) => b[1].revenue - a[1].revenue).slice(0, 8);
   }, [base, status]);
 
   const peakRevenue = Math.max(1, ...topStores.map(([, v]) => v.revenue));
@@ -150,14 +162,15 @@ export default function AdminOrders() {
               {filtered.length} orders · {formatINR(filtered.reduce((s, o) => s + o.totals.grand, 0))}
             </p>
           </div>
-          <TrendBars orders={filtered} />
+          <TrendLine orders={filtered} />
         </section>
 
         <section className="rounded-2xl bg-white p-4 ring-1 ring-line lg:col-span-2">
           <p className="mb-3 text-sm font-semibold text-ink-900">Top stores {status && <span className="font-normal text-ink-400">· {STATUS_META[status].label.toLowerCase()}</span>}</p>
           <div className="space-y-1.5">
-            {topStores.map(([id, v]) => {
+            {topStores.map(([id, v], i) => {
               const active = nodeId === id;
+              const shade = RANK[Math.min(i, RANK.length - 1)];
               return (
                 <button
                   key={id}
@@ -166,7 +179,7 @@ export default function AdminOrders() {
                 >
                   <span className={`w-32 truncate text-xs ${active ? "font-bold text-brand-700" : "text-ink-600"}`}>{nodeName(id)}</span>
                   <span className="h-2.5 flex-1 overflow-hidden rounded-full bg-surface">
-                    <span className="block h-full rounded-full bg-brand-500" style={{ width: `${Math.max(3, (v.revenue / peakRevenue) * 100)}%` }} />
+                    <span className="block h-full rounded-full" style={{ width: `${Math.max(3, (v.revenue / peakRevenue) * 100)}%`, background: shade }} />
                   </span>
                   <span className="w-16 text-right text-[11px] font-medium text-ink-700">{v.count} ord</span>
                 </button>
@@ -198,8 +211,18 @@ export default function AdminOrders() {
                 </Td>
                 <Td>{o.customer.name}<span className="ml-1 text-xs text-ink-400">{o.customer.pincode}</span></Td>
                 <Td>
-                  {o.items.length} item{o.items.length > 1 ? "s" : ""}
-                  {o.items.some((i) => i.serial) && <span className="ml-1 font-mono text-xs text-ink-400">{o.items.find((i) => i.serial)?.serial}</span>}
+                  <span className="flex items-center gap-2.5">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface ring-1 ring-line">
+                      {imageOf(o.items[0]?.productId) ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={imageOf(o.items[0]?.productId)} alt="" className="h-full w-full object-contain" loading="lazy" />
+                      ) : <ImageOff className="h-4 w-4 text-ink-300" />}
+                    </span>
+                    <span>
+                      {o.items.length} item{o.items.length > 1 ? "s" : ""}
+                      {o.items.some((i) => i.serial) && <span className="ml-1 font-mono text-xs text-ink-400">{o.items.find((i) => i.serial)?.serial}</span>}
+                    </span>
+                  </span>
                 </Td>
                 <Td><span className="text-xs">{nodeName(primaryNode(o))}</span></Td>
                 <Td>

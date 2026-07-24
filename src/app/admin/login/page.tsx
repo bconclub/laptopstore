@@ -60,10 +60,7 @@ function LoginInner() {
       <div className="mb-8 flex items-center gap-3">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/brand/icon.png" alt="Laptop Store" className="h-11 w-11" />
-        <span>
-          <span className="block text-lg font-bold leading-tight text-ink-900">Laptop Store · Admin</span>
-          <span className="block text-xs text-ink-400">One screen for the whole business</span>
-        </span>
+        <span className="text-lg font-bold leading-tight text-ink-900">Laptop Store · Admin</span>
       </div>
 
       {error && <p className="mb-4 rounded-lg bg-danger/10 px-3 py-2 text-sm text-danger">{error}</p>}

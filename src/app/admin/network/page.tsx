@@ -35,11 +35,11 @@ function NodeDrawer({ node, orders, repairs, onClose }: {
 
   return (
     <>
-      <div onClick={onClose} className={`fixed inset-0 z-40 bg-ink-900/25 transition-opacity duration-200 ${open ? "opacity-100" : "pointer-events-none opacity-0"}`} aria-hidden="true" />
+      <div onClick={onClose} className={`fixed inset-0 z-[1200] bg-ink-900/25 transition-opacity duration-200 ${open ? "opacity-100" : "pointer-events-none opacity-0"}`} aria-hidden="true" />
       <aside
         role="dialog"
         aria-label="Node details"
-        className={`fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col bg-white shadow-(--shadow-float) transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] ${open ? "translate-x-0" : "translate-x-full"}`}
+        className={`fixed inset-y-0 right-0 z-[1201] flex w-full max-w-md flex-col bg-white shadow-(--shadow-float) transition-transform duration-300 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] ${open ? "translate-x-0" : "translate-x-full"}`}
       >
         {node && (
           <>
@@ -91,11 +91,13 @@ function NodeDrawer({ node, orders, repairs, onClose }: {
               <section>
                 <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-400">Recent orders here</h3>
                 {nodeOrders.slice(0, 6).map((o) => (
-                  <div key={o.id} className="flex items-center justify-between border-b border-line py-1.5 text-sm last:border-0">
+                  <div key={o.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-line py-1.5 text-sm last:border-0">
                     <span className="font-mono text-xs text-brand-700">{o.code}</span>
-                    <span className="text-xs text-ink-500">{o.customer.name}</span>
-                    <span className="text-xs font-semibold text-ink-900">{formatINR(o.totals.grand)}</span>
-                    <StatusChip value={o.status} />
+                    <span className="truncate text-xs text-ink-500">{o.customer.name}</span>
+                    <span className="flex items-center justify-end gap-1.5">
+                      <span className="text-xs font-semibold text-ink-900">{formatINR(o.totals.grand)}</span>
+                      <StatusChip value={o.status} />
+                    </span>
                   </div>
                 ))}
                 {!nodeOrders.length && <p className="text-xs text-ink-400">No orders routed here yet.</p>}
@@ -106,9 +108,9 @@ function NodeDrawer({ node, orders, repairs, onClose }: {
                 <section>
                   <h3 className="mb-2 text-xs font-bold uppercase tracking-wide text-ink-400">Repairs in the shop</h3>
                   {openRepairs.slice(0, 6).map((j) => (
-                    <div key={j.id} className="flex items-center justify-between border-b border-line py-1.5 text-sm last:border-0">
+                    <div key={j.id} className="grid grid-cols-[auto_1fr_auto] items-center gap-2 border-b border-line py-1.5 text-sm last:border-0">
                       <span className="font-mono text-xs text-brand-700">{j.code}</span>
-                      <span className="max-w-36 truncate text-xs text-ink-500">{j.brand} · {j.issue}</span>
+                      <span className="truncate text-xs text-ink-500">{j.brand} · {j.issue}</span>
                       <StatusChip value={j.stage} />
                     </div>
                   ))}
