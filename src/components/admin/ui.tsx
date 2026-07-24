@@ -79,6 +79,29 @@ export function MiniBars({ data, max }: { data: { label: string; value: number }
   );
 }
 
+/** Skeleton block — subtle pulse placeholder while data loads (no layout jump). */
+export function Skeleton({ className = "" }: { className?: string }) {
+  return <span className={`block animate-pulse rounded bg-line/70 ${className}`} />;
+}
+
+/** Full-card dashboard skeleton — mirrors the loaded layout so nothing shifts. */
+export function DashboardSkeleton() {
+  return (
+    <div className="space-y-5">
+      <Skeleton className="h-8 w-64" />
+      <div className="grid gap-5 lg:grid-cols-5">
+        <div className="rounded-2xl bg-white p-5 shadow-(--shadow-card) lg:col-span-3"><Skeleton className="mb-3 h-6 w-40" /><Skeleton className="h-[280px] w-full" /></div>
+        <div className="rounded-2xl bg-white p-5 shadow-(--shadow-card) lg:col-span-2"><Skeleton className="mb-3 h-6 w-40" /><Skeleton className="h-[300px] w-full" /></div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="rounded-2xl bg-white p-4 shadow-(--shadow-card)"><Skeleton className="h-4 w-24" /><Skeleton className="mt-2 h-7 w-16" /><Skeleton className="mt-2 h-3 w-full" /></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function Th({ children }: { children: ReactNode }) {
   return <th className="whitespace-nowrap px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-ink-400">{children}</th>;
 }

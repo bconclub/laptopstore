@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { OrderDrawer } from "@/components/admin/OrderDrawer";
 import { NetworkActivityMap } from "./NetworkActivityMap";
-import { StatusChip, api } from "@/components/admin/ui";
+import { DashboardSkeleton, StatusChip, api } from "@/components/admin/ui";
 import { formatINR } from "@/lib/format";
 import { useCatalogImages } from "@/lib/useCatalogImages";
 import type { Analytics } from "@/lib/provider/contract";
@@ -240,7 +240,7 @@ export default function AdminDashboard() {
   }
 
   if (error) return <p className="rounded-lg bg-danger/10 p-4 text-sm text-danger">{error}</p>;
-  if (!a || !stats) return <p className="p-4 text-sm text-ink-500">Loading…</p>;
+  if (!a || !stats) return <DashboardSkeleton />;
 
   const lineTotal = Math.max(1, a.revenueByLine.reduce((s, r) => s + r.revenue, 0));
 

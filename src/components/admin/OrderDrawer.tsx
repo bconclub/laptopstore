@@ -9,7 +9,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { ExternalLink, MapPin, X } from "lucide-react";
-import { StatusChip, api } from "@/components/admin/ui";
+import { Skeleton, StatusChip, api } from "@/components/admin/ui";
 import { formatINR } from "@/lib/format";
 import type { Order, StoreNode } from "@/lib/types";
 
@@ -246,7 +246,9 @@ export function OrderDrawer({
             </div>
           </>
         ) : (
-          <p className="p-6 text-sm text-ink-500">{error || "Loading order…"}</p>
+          error ? <p className="p-6 text-sm text-danger">{error}</p> : (
+            <div className="space-y-4 p-5"><Skeleton className="h-6 w-32" /><Skeleton className="h-16 w-full" /><Skeleton className="h-24 w-full" /><Skeleton className="h-24 w-full" /></div>
+          )
         )}
       </aside>
     </>

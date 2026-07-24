@@ -8,7 +8,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ImageOff, X } from "lucide-react";
-import { LineChip, StatusChip, ZohoLock, api } from "@/components/admin/ui";
+import { LineChip, Skeleton, StatusChip, ZohoLock, api } from "@/components/admin/ui";
 import { formatINR } from "@/lib/format";
 import type { ProductV2, SerialUnit, StockRecord, SyncRecord } from "@/lib/types";
 
@@ -226,7 +226,9 @@ export function ProductDrawer({
             </div>
           </>
         ) : (
-          <p className="p-6 text-sm text-ink-500">{msg || "Loading product…"}</p>
+          msg ? <p className="p-6 text-sm text-danger">{msg}</p> : (
+            <div className="space-y-4 p-5"><Skeleton className="h-24 w-full" /><Skeleton className="h-20 w-full" /><Skeleton className="h-24 w-full" /></div>
+          )
         )}
       </aside>
     </>

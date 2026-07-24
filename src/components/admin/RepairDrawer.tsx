@@ -8,7 +8,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { MapPin, Wrench, X } from "lucide-react";
-import { StatusChip, api } from "@/components/admin/ui";
+import { Skeleton, StatusChip, api } from "@/components/admin/ui";
 import { formatINR } from "@/lib/format";
 import type { RepairJob, RepairStage, StoreNode } from "@/lib/types";
 
@@ -204,7 +204,9 @@ export function RepairDrawer({
             </div>
           </>
         ) : (
-          <p className="p-6 text-sm text-ink-500">{error || "Loading job…"}</p>
+          error ? <p className="p-6 text-sm text-danger">{error}</p> : (
+            <div className="space-y-4 p-5"><Skeleton className="h-6 w-32" /><Skeleton className="h-20 w-full" /><Skeleton className="h-32 w-full" /></div>
+          )
         )}
       </aside>
     </>
