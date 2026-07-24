@@ -54,12 +54,12 @@ const ROLE_LABEL: Record<string, string> = {
   b2b_desk: "B2B Desk",
 };
 
-export function AdminNav({ role, name }: { role?: Role; name?: string }) {
+export function AdminNav({ role, name, mobileOpen = false, onNavigate }: { role?: Role; name?: string; mobileOpen?: boolean; onNavigate?: () => void }) {
   const path = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
 
-  // Persist the collapse preference — long-session users set it once.
+  // Persist the collapse preference — long-session users set it once. (desktop only)
   useEffect(() => { setCollapsed(localStorage.getItem("ls-nav-collapsed") === "1"); }, []);
   function toggle() {
     setCollapsed((c) => { localStorage.setItem("ls-nav-collapsed", c ? "0" : "1"); return !c; });
@@ -72,20 +72,23 @@ export function AdminNav({ role, name }: { role?: Role; name?: string }) {
   }
 
   const initials = (name ?? "LS").split(/\s+/).map((w) => w[0]).slice(0, 2).join("").toUpperCase();
-  const W = collapsed ? "w-16" : "w-60";
+  // Collapse (icon-rail) is a desktop affordance; on mobile the drawer is always full width.
+  const W = collapsed ? "md:w-16" : "md:w-60";
 
   return (
-    <nav className={`flex h-screen ${W} shrink-0 flex-col border-r border-line bg-white transition-[width] duration-200`}>
+    <nav className={`fixed inset-y-0 left-0 z-[1300] flex h-screen w-64 shrink-0 flex-col border-r border-line bg-white transition-transform duration-200 md:static md:z-auto md:translate-x-0 ${W} ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
+      {/* collapse hides labels on DESKTOP only via md: overrides; the mobile
+          drawer is always full-width + labelled. */}
       {/* Brand + collapse toggle */}
-      <div className={`flex items-center pb-5 pt-5 ${collapsed ? "flex-col gap-3 px-0" : "gap-2.5 px-4"}`}>
-        <Link href="/admin" className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2.5 px-4 pb-5 pt-5">
+        <Link href="/admin" onClick={onNavigate} className="flex items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/brand/icon.png" alt="Laptop Store" className="h-9 w-9" />
-          {!collapsed && <span className="text-base font-bold leading-tight text-ink-900">Laptop Store</span>}
+          <span className={`text-base font-bold leading-tight text-ink-900 ${collapsed ? "md:hidden" : ""}`}>Laptop Store</span>
         </Link>
-        {!collapsed && <span className="flex-1" />}
+        <span className={`flex-1 ${collapsed ? "md:hidden" : ""}`} />
         <button onClick={toggle} title={collapsed ? "Expand" : "Collapse"}
-          className="rounded-md p-1.5 text-ink-300 transition-colors hover:bg-surface hover:text-ink-700">
+          className="hidden rounded-md p-1.5 text-ink-300 transition-colors hover:bg-surface hover:text-ink-700 md:inline-flex">
           {collapsed ? <PanelLeftOpen className="h-4.5 w-4.5" /> : <PanelLeftClose className="h-4.5 w-4.5" />}
         </button>
       </div>
@@ -97,19 +100,19 @@ export function AdminNav({ role, name }: { role?: Role; name?: string }) {
           if (!items.length) return null;
           return (
             <div key={g.title || "home"}>
-              {g.title && !collapsed && <p className="mb-1 px-2 text-[11px] font-semibold text-ink-300">{g.title}</p>}
-              {g.title && collapsed && <div className="mx-2 mb-1 border-t border-line" />}
+              {g.title && <p className={`mb-1 px-2 text-[11px] font-semibold text-ink-300 ${collapsed ? "md:hidden" : ""}`}>{g.title}</p>}
+              {g.title && collapsed && <div className="mx-2 mb-1 hidden border-t border-line md:block" />}
               <div className="space-y-0.5">
                 {items.map((n) => {
                   const active = n.href === "/admin" ? path === "/admin" : path.startsWith(n.href);
                   const Icon = n.icon;
                   return (
-                    <Link key={n.href} href={n.href} title={collapsed ? n.label : undefined}
-                      className={`flex items-center rounded-lg py-2 text-sm transition-colors duration-150 ${collapsed ? "justify-center px-0" : "gap-2.5 px-2.5"} ${
+                    <Link key={n.href} href={n.href} onClick={onNavigate} title={collapsed ? n.label : undefined}
+                      className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors duration-150 ${collapsed ? "md:justify-center md:gap-0 md:px-0" : ""} ${
                         active ? "bg-brand-50 font-semibold text-brand-700" : "font-medium text-ink-600 hover:bg-surface hover:text-ink-900"
                       }`}>
                       <Icon className={`h-4.5 w-4.5 shrink-0 ${active ? "text-brand-600" : "text-ink-300"}`} />
-                      {!collapsed && n.label}
+                      <span className={collapsed ? "md:hidden" : ""}>{n.label}</span>
                     </Link>
                   );
                 })}
@@ -121,22 +124,18 @@ export function AdminNav({ role, name }: { role?: Role; name?: string }) {
 
       {/* User */}
       <div className="border-t border-line px-2.5 py-3">
-        <div className={`flex items-center rounded-lg py-1.5 ${collapsed ? "justify-center px-0" : "gap-2.5 px-2"}`}>
+        <div className="flex items-center gap-2.5 rounded-lg px-2 py-1.5">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-400 text-xs font-bold text-ink-900">{initials}</span>
-          {!collapsed && (
-            <>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold leading-tight text-ink-900">{name ?? "Staff"}</span>
-                <span className="block text-[11px] leading-tight text-ink-400">{ROLE_LABEL[role ?? ""] ?? "Signed in"}</span>
-              </span>
-              <button onClick={signOut} title="Sign out" className="rounded-md p-1.5 text-ink-300 transition-colors hover:bg-surface hover:text-ink-700">
-                <LogOut className="h-4 w-4" />
-              </button>
-            </>
-          )}
+          <span className={`min-w-0 flex-1 ${collapsed ? "md:hidden" : ""}`}>
+            <span className="block truncate text-sm font-semibold leading-tight text-ink-900">{name ?? "Staff"}</span>
+            <span className="block text-[11px] leading-tight text-ink-400">{ROLE_LABEL[role ?? ""] ?? "Signed in"}</span>
+          </span>
+          <button onClick={signOut} title="Sign out" className={`rounded-md p-1.5 text-ink-300 transition-colors hover:bg-surface hover:text-ink-700 ${collapsed ? "md:hidden" : ""}`}>
+            <LogOut className="h-4 w-4" />
+          </button>
         </div>
         {collapsed && (
-          <button onClick={signOut} title="Sign out" className="mt-1 flex w-full justify-center rounded-md p-1.5 text-ink-300 transition-colors hover:bg-surface hover:text-ink-700">
+          <button onClick={signOut} title="Sign out" className="mt-1 hidden w-full justify-center rounded-md p-1.5 text-ink-300 transition-colors hover:bg-surface hover:text-ink-700 md:flex">
             <LogOut className="h-4 w-4" />
           </button>
         )}
