@@ -8,9 +8,9 @@ export const dynamic = "force-dynamic";
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   // No session (login page) — no admin chrome. The nav belongs to signed-in staff only.
-  if (!session) return <div className="min-h-screen bg-surface">{children}</div>;
+  if (!session) return <div data-admin className="min-h-screen bg-surface">{children}</div>;
   return (
-    <div className="flex min-h-screen bg-surface">
+    <div data-admin className="flex min-h-screen bg-surface">
       <div className="sticky top-0 h-screen">
         <AdminNav role={session.role} name={session.name} />
       </div>

@@ -202,6 +202,21 @@ h1, h2, h3, h4 {
     transform: none !important;
     transition: none !important;
   }
+  /* Admin: keep slide/scale MOVEMENT off, but let opacity fades stay (the
+     intentional reduced alternative — panels appear, they don't travel). */
+  [data-admin] * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 120ms !important;
+    transition-property: opacity, background-color, color, border-color, box-shadow, fill, stroke !important;
+  }
+}
+
+/* Visible keyboard focus across the admin — a Tab user always sees where they
+   are. Pointer clicks stay ring-free via :focus-visible. */
+[data-admin] :is(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 6px;
 }
 
 /* Safe-area padding for the mobile bottom nav */

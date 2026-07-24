@@ -303,7 +303,7 @@ export default function AdminDashboard() {
         {/* Revenue */}
         <section className="rounded-2xl bg-white p-5 shadow-(--shadow-card) lg:col-span-3">
           <div className="flex items-baseline gap-3">
-            <p className="text-sm font-semibold text-ink-900">Revenue</p>
+            <h2 className="text-sm font-semibold text-ink-900">Revenue</h2>
             <Delta pct={stats.revDelta} />
             <span className="text-xs text-ink-400">vs previous {range} days</span>
           </div>
@@ -313,7 +313,7 @@ export default function AdminDashboard() {
 
         {/* Network performance map — where the business is buzzing */}
         <section className="rounded-2xl bg-white p-5 shadow-(--shadow-card) lg:col-span-2">
-          <p className="mb-2 text-sm font-semibold text-ink-900">Network performance</p>
+          <h2 className="mb-2 text-sm font-semibold text-ink-900">Network performance</h2>
           <NetworkActivityMap nodes={nodeList} orders={orders} />
         </section>
       </div>
@@ -348,7 +348,7 @@ export default function AdminDashboard() {
       <div className="grid gap-5 lg:grid-cols-2">
         <section className="rounded-2xl bg-white p-5 shadow-(--shadow-card)">
           <div className="mb-3 flex items-center justify-between">
-            <p className="text-sm font-semibold text-ink-900">Revenue by line</p>
+            <h2 className="text-sm font-semibold text-ink-900">Revenue by line</h2>
             <Link href="/admin/analytics" className="text-xs font-medium text-brand-700 hover:underline">View all</Link>
           </div>
           <div className="space-y-2">
@@ -371,7 +371,7 @@ export default function AdminDashboard() {
         </section>
         <section className="rounded-2xl bg-white p-5 shadow-(--shadow-card)">
           <div className="mb-3 flex items-center justify-between">
-            <p className="text-sm font-semibold text-ink-900">Top nodes</p>
+            <h2 className="text-sm font-semibold text-ink-900">Top nodes</h2>
             <Link href="/admin/network" className="text-xs font-medium text-brand-700 hover:underline">View all</Link>
           </div>
           <div className="space-y-2">
@@ -395,7 +395,7 @@ export default function AdminDashboard() {
       {/* Latest orders */}
       <section className="rounded-2xl bg-white shadow-(--shadow-card)">
         <div className="flex items-center justify-between px-5 py-4">
-          <p className="text-sm font-semibold text-ink-900">Latest orders</p>
+          <h2 className="text-sm font-semibold text-ink-900">Latest orders</h2>
           <Link href="/admin/orders" className="flex items-center gap-1 text-sm font-medium text-brand-700 hover:underline">
             View all orders <ArrowRight className="h-3.5 w-3.5" />
           </Link>
