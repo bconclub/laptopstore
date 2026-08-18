@@ -1,50 +1,61 @@
 /**
- * SupabaseProvider — real catalog reads against supabase/schema_v2.sql.
+ * RdsProvider — catalog reads over plain Postgres (AWS RDS staging/production).
  *
- * Wiring status (progressive, by design):
- *   LIVE     catalog: products, stock, price tiers, nodes, categories,
- *            resolvePrice, sync health — read from Supabase.
- *   PENDING  operations: orders, enquiries, repairs, rentals, users, admin
- *            writes — these are transactional state machines and move in the
- *            ops migration (RPCs per transition, mirroring assertTransition).
- *            Until then they throw loudly rather than lie.
+ * Same wiring philosophy as the SupabaseProvider:
+ *   LIVE     catalog reads: products, stock, tiers, nodes, categories,
+ *            resolvePrice, sync health.
+ *   PENDING  ops layer (orders/enquiries/repairs/rentals) — migrates as
+ *            transactional SQL in the ops migration; throws loudly until then.
  *
- * Selection: getProvider() picks this class only when DATA_PROVIDER=supabase
- * AND the env keys exist. The mock stays the default until the flip.
+ * Server-side ONLY: the pg pool must never reach a client bundle. Pages using
+ * it are server components / route handlers, which is already how the app
+ * talks to its DataProvider.
  *
- * Ownership: this provider READS. The only writer of Zoho-owned columns is the
- * sync engine through supabase/sync_v1.sql RPCs with the service role.
+ * Env: DATABASE_URL=postgresql://user:pass@host:5432/laptopstore?sslmode=require
+ * Selection: DATA_PROVIDER=rds in getProvider().
  */
 
+import { Pool } from "pg";
+
 import type {
+  Audience,
   Category,
+  PriceTier,
   Product,
   ProductV2,
-  PriceTier,
   StockRecord,
   StoreNode,
   SyncRecord,
-  Audience,
 } from "@/lib/types";
 import type { DataProvider, ProductFilter } from "@/lib/provider/contract";
 import { MockProvider } from "@/lib/provider/mock/provider";
-import { getSupabase, supabaseReady } from "@/lib/supabase";
 
-export function supabaseConfigured(): boolean {
-  return supabaseReady();
-}
-
-function notImplemented(method: string): never {
-  throw new Error(
-    `SupabaseProvider.${method}: operations layer not yet migrated — this ` +
-      `method lands with the ops RPC migration. Catalog reads are live; ` +
-      `orders/enquiries/repairs/rentals still run on the mock until then.`,
-  );
+export function rdsConfigured(): boolean {
+  return Boolean(process.env.DATABASE_URL);
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-/** DB row (snake_case, schema_v2) → ProductV2 (camelCase, types.ts). */
+// One pool per server process; survives HMR via globalThis.
+const g = globalThis as unknown as { __lsRdsPool?: Pool };
+function pool(): Pool {
+  if (!g.__lsRdsPool) {
+    g.__lsRdsPool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      max: 5,
+      ssl: { rejectUnauthorized: false }, // RDS default certs; pin CA in production
+    });
+  }
+  return g.__lsRdsPool;
+}
+
+function notImplemented(method: string): never {
+  throw new Error(
+    `RdsProvider.${method}: ops layer not yet migrated — catalog reads are ` +
+      `live, orders/enquiries/repairs/rentals still run on the mock.`,
+  );
+}
+
 function rowToProduct(r: any): ProductV2 {
   return {
     id: r.id,
@@ -90,18 +101,11 @@ function rowToNode(r: any): StoreNode {
   } as StoreNode;
 }
 
-export class SupabaseProvider implements DataProvider {
-  private db = getSupabase()!;
-  /** Website-owned statics (category tree, legacy adapter) — not DB data. */
+export class RdsProvider implements DataProvider {
+  /** Website-owned statics (category tree, legacy adapter). */
   private statics = new MockProvider();
 
-  constructor() {
-    if (!getSupabase()) {
-      throw new Error("SupabaseProvider: NEXT_PUBLIC_SUPABASE_URL / ANON_KEY not set");
-    }
-  }
-
-  // ── Categories: website-owned taxonomy, stays in src/data ──────────────────
+  // ── Categories: static website-owned taxonomy ───────────────────────────────
   getCategoryTree(): Promise<Category[]> {
     return this.statics.getCategoryTree();
   }
@@ -114,53 +118,54 @@ export class SupabaseProvider implements DataProvider {
 
   // ── Products ────────────────────────────────────────────────────────────────
   async getProducts(filter: ProductFilter = {}): Promise<ProductV2[]> {
-    let q = this.db.from("products").select("*");
+    const where: string[] = [];
+    const args: unknown[] = [];
+    const arg = (v: unknown) => {
+      args.push(v);
+      return `$${args.length}`;
+    };
 
-    if (filter.status && filter.status !== "all") q = q.eq("status", filter.status);
-    else if (!filter.status) q = q.eq("status", "active");
-    if (filter.line) q = q.eq("line", filter.line);
-    if (filter.brand) q = q.ilike("brand", filter.brand);
-    if (filter.category) q = q.eq("category", filter.category); // descendants below
-    if (filter.priceMin != null) q = q.gte("price", filter.priceMin);
-    if (filter.priceMax != null) q = q.lte("price", filter.priceMax);
+    if (filter.status && filter.status !== "all") where.push(`status = ${arg(filter.status)}`);
+    else if (!filter.status) where.push(`status = 'active'`);
+    if (filter.line) where.push(`line = ${arg(filter.line)}`);
+    if (filter.brand) where.push(`brand ilike ${arg(filter.brand)}`);
+    if (filter.priceMin != null) where.push(`price >= ${arg(filter.priceMin)}`);
+    if (filter.priceMax != null) where.push(`price <= ${arg(filter.priceMax)}`);
     if (filter.search) {
-      const s = filter.search.replaceAll("%", "");
-      q = q.or(`titles_display.ilike.%${s}%,sku.ilike.%${s}%,brand.ilike.%${s}%`);
+      const s = `%${filter.search.replaceAll("%", "")}%`;
+      where.push(
+        `(titles_display ilike ${arg(s)} or sku ilike ${arg(s)} or brand ilike ${arg(s)})`,
+      );
     }
-    q = q.order("sku").limit(filter.limit ?? 1000);
-    if (filter.offset) q = q.range(filter.offset, filter.offset + (filter.limit ?? 1000) - 1);
-
-    const { data, error } = await q;
-    if (error) throw new Error(`getProducts: ${error.message}`);
-    let out = (data ?? []).map(rowToProduct);
-
-    // Category descendants + line_data attribute filters applied in process:
-    // taxonomy is website-owned static data, and attribute filters live inside
-    // the jsonb line_data. Fine at catalogue scale; revisit if it ever isn't.
     if (filter.category) {
-      const trail = await this.statics.getCategoryTree();
-      const descendants = new Set<string>();
+      // taxonomy is website-owned static data; expand descendants here
+      const tree = await this.statics.getCategoryTree();
+      const slugs = new Set<string>();
       const walk = (cats: Category[], under: boolean) => {
         for (const c of cats) {
           const hit = under || c.slug === filter.category;
-          if (hit) descendants.add(c.slug);
+          if (hit) slugs.add(c.slug);
           walk(c.children ?? [], hit);
         }
       };
-      walk(trail, false);
-      const direct = await this.db
-        .from("products")
-        .select("*")
-        .in("category", [...descendants])
-        .eq("status", filter.status && filter.status !== "all" ? filter.status : "active");
-      if (!direct.error) out = (direct.data ?? []).map(rowToProduct);
+      walk(tree, false);
+      if (!slugs.size) slugs.add(filter.category);
+      where.push(`category = any(${arg([...slugs])})`);
     }
+
+    const sql = `select * from products ${where.length ? "where " + where.join(" and ") : ""}
+                 order by sku limit ${Number(filter.limit ?? 1000)} offset ${Number(filter.offset ?? 0)}`;
+    const { rows } = await pool().query(sql, args);
+    let out = rows.map(rowToProduct);
+
     for (const key of ["processor", "ram", "storage", "gpu", "screen", "useCase"] as const) {
       const want = filter[key];
       if (want) {
         out = out.filter((p) => {
           const ld = p.lineData as unknown as Record<string, unknown>;
-          return String(ld?.[key] ?? "").toLowerCase().includes(String(want).toLowerCase());
+          return String(ld?.[key] ?? "")
+            .toLowerCase()
+            .includes(String(want).toLowerCase());
         });
       }
     }
@@ -171,15 +176,13 @@ export class SupabaseProvider implements DataProvider {
   }
 
   async getProductBySlug(slug: string): Promise<ProductV2 | undefined> {
-    const { data, error } = await this.db.from("products").select("*").eq("slug", slug).maybeSingle();
-    if (error) throw new Error(`getProductBySlug: ${error.message}`);
-    return data ? rowToProduct(data) : undefined;
+    const { rows } = await pool().query("select * from products where slug = $1", [slug]);
+    return rows[0] ? rowToProduct(rows[0]) : undefined;
   }
 
   async getProductById(id: string): Promise<ProductV2 | undefined> {
-    const { data, error } = await this.db.from("products").select("*").eq("id", id).maybeSingle();
-    if (error) throw new Error(`getProductById: ${error.message}`);
-    return data ? rowToProduct(data) : undefined;
+    const { rows } = await pool().query("select * from products where id = $1", [id]);
+    return rows[0] ? rowToProduct(rows[0]) : undefined;
   }
 
   toLegacy(p: ProductV2): Product {
@@ -188,27 +191,27 @@ export class SupabaseProvider implements DataProvider {
 
   // ── Stock and pricing ───────────────────────────────────────────────────────
   async getNodeStock(productId: string): Promise<StockRecord[]> {
-    const { data, error } = await this.db
-      .from("stock_records")
-      .select("product_id, node_id, qty")
-      .eq("product_id", productId);
-    if (error) throw new Error(`getNodeStock: ${error.message}`);
-    return (data ?? []).map((r) => ({ productId: r.product_id, nodeId: r.node_id, qty: r.qty }));
+    const { rows } = await pool().query(
+      "select product_id, node_id, qty from stock_records where product_id = $1",
+      [productId],
+    );
+    return rows.map((r) => ({ productId: r.product_id, nodeId: r.node_id, qty: r.qty }));
   }
 
   async getTotalStock(productId: string): Promise<number> {
-    const rows = await this.getNodeStock(productId);
-    return rows.reduce((a, r) => a + r.qty, 0);
+    const { rows } = await pool().query(
+      "select coalesce(sum(qty), 0)::int as total from stock_records where product_id = $1",
+      [productId],
+    );
+    return rows[0]?.total ?? 0;
   }
 
   async getPriceTiers(productId: string): Promise<PriceTier[]> {
-    const { data, error } = await this.db
-      .from("price_tiers")
-      .select("product_id, min_qty, unit_price")
-      .eq("product_id", productId)
-      .order("min_qty");
-    if (error) throw new Error(`getPriceTiers: ${error.message}`);
-    return (data ?? []).map((r) => ({
+    const { rows } = await pool().query(
+      "select product_id, min_qty, unit_price from price_tiers where product_id = $1 order by min_qty",
+      [productId],
+    );
+    return rows.map((r) => ({
       productId: r.product_id,
       minQty: r.min_qty,
       unitPrice: Number(r.unit_price),
@@ -232,38 +235,50 @@ export class SupabaseProvider implements DataProvider {
 
   // ── Network ─────────────────────────────────────────────────────────────────
   async getNodes(filter?: { type?: StoreNode["type"]; city?: string }): Promise<StoreNode[]> {
-    let q = this.db.from("nodes").select("*").eq("status", "active");
-    if (filter?.type) q = q.eq("type", filter.type);
-    if (filter?.city) q = q.ilike("city", filter.city);
-    const { data, error } = await q.order("name");
-    if (error) throw new Error(`getNodes: ${error.message}`);
-    return (data ?? []).map(rowToNode);
+    const where = ["status = 'active'"];
+    const args: unknown[] = [];
+    if (filter?.type) {
+      args.push(filter.type);
+      where.push(`type = $${args.length}`);
+    }
+    if (filter?.city) {
+      args.push(filter.city);
+      where.push(`city ilike $${args.length}`);
+    }
+    const { rows } = await pool().query(
+      `select * from nodes where ${where.join(" and ")} order by name`,
+      args,
+    );
+    return rows.map(rowToNode);
   }
 
   async getNode(id: string): Promise<StoreNode | undefined> {
-    const { data, error } = await this.db.from("nodes").select("*").eq("id", id).maybeSingle();
-    if (error) throw new Error(`getNode: ${error.message}`);
-    return data ? rowToNode(data) : undefined;
+    const { rows } = await pool().query("select * from nodes where id = $1", [id]);
+    return rows[0] ? rowToNode(rows[0]) : undefined;
   }
 
   // ── Sync health ─────────────────────────────────────────────────────────────
   async getSyncRecords(filter?: { status?: SyncRecord["status"] }): Promise<SyncRecord[]> {
-    let q = this.db.from("sync_records").select("*");
-    if (filter?.status) q = q.eq("status", filter.status);
-    const { data, error } = await q.order("last_run_at", { ascending: false });
-    if (error) throw new Error(`getSyncRecords: ${error.message}`);
-    return (data ?? []).map((r: any) => ({
+    const args: unknown[] = [];
+    let sql = "select * from sync_records";
+    if (filter?.status) {
+      args.push(filter.status);
+      sql += " where status = $1";
+    }
+    sql += " order by last_run_at desc";
+    const { rows } = await pool().query(sql, args);
+    return rows.map((r: any) => ({
       id: r.id,
       entityType: r.entity_type,
       entityId: r.entity_id,
       zohoRecordId: r.zoho_record_id ?? undefined,
       status: r.status,
-      lastRunAt: r.last_run_at,
+      lastRunAt: r.last_run_at instanceof Date ? r.last_run_at.toISOString() : r.last_run_at,
       error: r.error ?? undefined,
     })) as SyncRecord[];
   }
 
-  // ── Operations: pending the ops RPC migration ──────────────────────────────
+  // ── Ops layer: pending migration ────────────────────────────────────────────
   getSerialUnits(): never { return notImplemented("getSerialUnits"); }
   getRentalUnits(): never { return notImplemented("getRentalUnits"); }
   getRentalAvailability(): never { return notImplemented("getRentalAvailability"); }

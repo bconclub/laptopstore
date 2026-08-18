@@ -5,13 +5,22 @@
 
 import type { DataProvider } from "./contract";
 import { MockProvider } from "./mock/provider";
+import { RdsProvider, rdsConfigured } from "./rds/provider";
+import { SupabaseProvider, supabaseConfigured } from "./supabase/provider";
 
 // NOTE: no globalThis cache here — MockProvider is stateless (all state lives
 // in the MockStore's own globalThis slot), and caching the provider instance
 // across dev HMR pins OLD method code. A fresh instance per call is free.
 export function getProvider(): DataProvider {
-  // "supabase" branch lands in Phase 7 (SupabaseProvider stub) and goes
-  // live when the project + env vars exist.
+  // Flip: set DATA_PROVIDER=supabase + the two NEXT_PUBLIC_SUPABASE_* vars.
+  // Catalog reads go live against schema_v2; the ops layer still throws until
+  // the ops RPC migration, so flip only when catalog-first pages are the goal.
+  if (process.env.DATA_PROVIDER === "rds" && rdsConfigured()) {
+    return new RdsProvider();
+  }
+  if (process.env.DATA_PROVIDER === "supabase" && supabaseConfigured()) {
+    return new SupabaseProvider();
+  }
   return new MockProvider();
 }
 

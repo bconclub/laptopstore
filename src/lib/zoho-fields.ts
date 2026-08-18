@@ -7,6 +7,11 @@
  * admin and updateProduct() rejects writes to them unless the caller
  * passes asSyncEngine (used by the mock seed + future sync engine only).
  *
+ * The verified field names, endpoints and stock semantics behind this live
+ * in docs/zoho-contract.md at the repo root. The sync engine emits exactly
+ * the ZOHO_OWNED_PRODUCT_FIELDS subset (sync-engine/src/toWebsite.ts), so a
+ * sync patch can never carry a website-owned field.
+ *
  * Guarantees this enforces (deck §05): never invents a price, no phantom
  * stock, Zoho always wins conflicts.
  */
